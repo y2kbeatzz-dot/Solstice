@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.35 — visibly distinct Flow, Glow and Calm lyric effects, updated live Studio preview, persistent font and lyric settings, immersive vinyl and synced karaoke.",
+  "description": "Solstice 3.1.36 — smoother word-by-word karaoke with corrected NetEase timestamps and more responsive highlighting. Includes Lyrics Studio, Flow/Glow/Calm effects and immersive vinyl.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
-  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@80501630b9a4eba59f780e245ef7447be1db7515/user.css",
+  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@15d54ceb562a835acfd370f2c6c35a0d1ecd789d/user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@80501630b9a4eba59f780e245ef7447be1db7515/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@15d54ceb562a835acfd370f2c6c35a0d1ecd789d/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.35"
+  "version": "3.1.36"
 }
