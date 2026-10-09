@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.26 — responsive Immersive overhaul with precise needle cueing onto the vinyl, improved sizing and controls, artwork-centered black LP, smooth 33⅓ RPM spin, lyrics and Studio.",
-  "preview": "preview-v3.1.26.svg",
+  "description": "Solstice 3.1.27 — fixed public Marketplace package: matching responsive Immersive theme.js and user.css, working groove-tracking needle, correctly sized vinyl, smooth 33⅓ RPM spin, synced lyrics and Studio.",
+  "preview": "preview-v3.1.27.svg",
   "readme": "README.md",
-  "usercss": "user.css",
+  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@9050747b3a003c3cf4e3396f4c050253ffd893f1/user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@1a75fff6b4f5a2c44c59c199c78f1491850c977c/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@9050747b3a003c3cf4e3396f4c050253ffd893f1/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.26"
+  "version": "3.1.27"
 }
