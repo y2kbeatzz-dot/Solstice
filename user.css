@@ -532,53 +532,65 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 }
 
 
-/* v3.1.10: Spotify's explicit-content tag should display E, not a blank gray tile.
-   Scope to metadata badges; leave cover art, artist names and other icons alone. */
-.Root__main-view :is(span,div)[title="Explicit"],
-.Root__main-view :is(span,div)[title^="Explicit "],
-.Root__main-view :is(span,div)[aria-label="Explicit"],
-.Root__main-view :is(span,div)[aria-label="Explicit content"] {
+/* v3.1.11: Spotify's explicit badge is a .main-tag-container inside
+   .main-trackList-rowBadges. Force a legible E even if the native glyph is
+   hidden by Spotify font updates. Leave adjacent video/music-video markers
+   and native playback controls untouched. */
+.main-trackList-rowBadges .main-tag-container,
+.main-trackList-rowBadges [title~="Explicit" i],
+.main-trackList-rowBadges [aria-label="Explicit" i],
+.main-trackList-rowBadges [data-testid="track-row-explicit-badge"],
+.main-trackList-rowMainContent > .main-tag-container[title~="Explicit" i],
+.main-trackList-rowMainContent > [data-testid="track-row-explicit-badge"] {
   box-sizing:border-box!important;
   position:relative!important;
   display:inline-flex!important;
-  align-items:center!important;
   justify-content:center!important;
-  flex:0 0 18px!important;
-  width:18px!important;
-  min-width:18px!important;
-  height:18px!important;
-  min-height:18px!important;
+  align-items:center!important;
+  flex:none!important;
+  width:17px!important;
+  min-width:17px!important;
+  max-width:17px!important;
+  height:17px!important;
+  min-height:17px!important;
   padding:0!important;
-  margin-right:4px;
-  overflow:hidden!important;
-  vertical-align:middle!important;
+  margin:0 5px 0 0!important;
+  border:0!important;
   border-radius:3px!important;
-  background:#aeb9bd!important;
-  color:#132026!important;
-  opacity:1!important;
-}
-/* Overlay a legible E even when Spotify's icon glyph fails to render.
-   The title/aria-label stays intact for tooltips and screen readers. */
-.Root__main-view :is(span,div)[title="Explicit"]::after,
-.Root__main-view :is(span,div)[title^="Explicit "]::after,
-.Root__main-view :is(span,div)[aria-label="Explicit"]::after,
-.Root__main-view :is(span,div)[aria-label="Explicit content"]::after {
-  content:"E"!important;
-  position:absolute!important;
-  inset:0!important;
-  z-index:1!important;
-  display:grid!important;
-  place-items:center!important;
-  border-radius:inherit;
-  background:#aeb9bd!important;
-  color:#132026!important;
-  font-family:Arial,Helvetica,sans-serif!important;
-  font-size:11px!important;
-  font-style:normal!important;
-  font-weight:900!important;
+  background-color:#a9b6bc!important;
+  background-image:none!important;
+  overflow:hidden!important;
+  font-size:0!important; /* hide a malformed original character */
   line-height:1!important;
+  text-shadow:none!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+/* A pseudo-element is independent of Spotify's changing text/icon font. */
+.main-trackList-rowBadges .main-tag-container::after,
+.main-trackList-rowBadges [title~="Explicit" i]::after,
+.main-trackList-rowBadges [aria-label="Explicit" i]::after,
+.main-trackList-rowBadges [data-testid="track-row-explicit-badge"]::after,
+.main-trackList-rowMainContent > .main-tag-container[title~="Explicit" i]::after,
+.main-trackList-rowMainContent > [data-testid="track-row-explicit-badge"]::after {
+  content:"E"!important;
+  display:block!important;
+  position:relative!important;
+  z-index:1!important;
+  width:auto!important;
+  height:auto!important;
+  background:transparent!important;
+  color:#15242c!important;
+  font:900 11px/1 Arial,Helvetica,sans-serif!important;
   letter-spacing:0!important;
   text-shadow:none!important;
   opacity:1!important;
+  visibility:visible!important;
   pointer-events:none!important;
+}
+/* Current Spotify can also place the badge directly in row metadata. */
+.main-trackList-rowMainContent > span[title="Explicit"],
+.main-trackList-rowMainContent > span[aria-label="Explicit"] {
+  color:#15242c!important;
+  font-family:Arial,Helvetica,sans-serif!important;
 }
