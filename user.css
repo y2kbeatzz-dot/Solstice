@@ -530,3 +530,55 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
   opacity:1!important;
   object-fit:cover;
 }
+
+
+/* v3.1.10: Spotify's explicit-content tag should display E, not a blank gray tile.
+   Scope to metadata badges; leave cover art, artist names and other icons alone. */
+.Root__main-view :is(span,div)[title="Explicit"],
+.Root__main-view :is(span,div)[title^="Explicit "],
+.Root__main-view :is(span,div)[aria-label="Explicit"],
+.Root__main-view :is(span,div)[aria-label="Explicit content"] {
+  box-sizing:border-box!important;
+  position:relative!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 18px!important;
+  width:18px!important;
+  min-width:18px!important;
+  height:18px!important;
+  min-height:18px!important;
+  padding:0!important;
+  margin-right:4px;
+  overflow:hidden!important;
+  vertical-align:middle!important;
+  border-radius:3px!important;
+  background:#aeb9bd!important;
+  color:#132026!important;
+  opacity:1!important;
+}
+/* Overlay a legible E even when Spotify's icon glyph fails to render.
+   The title/aria-label stays intact for tooltips and screen readers. */
+.Root__main-view :is(span,div)[title="Explicit"]::after,
+.Root__main-view :is(span,div)[title^="Explicit "]::after,
+.Root__main-view :is(span,div)[aria-label="Explicit"]::after,
+.Root__main-view :is(span,div)[aria-label="Explicit content"]::after {
+  content:"E"!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:inherit;
+  background:#aeb9bd!important;
+  color:#132026!important;
+  font-family:Arial,Helvetica,sans-serif!important;
+  font-size:11px!important;
+  font-style:normal!important;
+  font-weight:900!important;
+  line-height:1!important;
+  letter-spacing:0!important;
+  text-shadow:none!important;
+  opacity:1!important;
+  pointer-events:none!important;
+}
