@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice glass theme with repaired self-contained animated vinyl and needle styling, 34% album label, smoother scrubbing, lyrics, and Studio. Resilient to stale Marketplace CSS. Solstice 3.1.23",
-  "preview": "preview-v3.1.23.svg",
+  "description": "Solstice 3.1.24 restores vinyl auto-spin when Marketplace CSS is unavailable, with smooth mouse scrub resume, realistic animated needle, 34% center cover, synchronized lyrics and Studio.",
+  "preview": "preview-v3.1.24.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@main/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@1eaf86138dbd5a4f8bda43f805c368507f77ae99/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.23"
+  "version": "3.1.24"
 }
