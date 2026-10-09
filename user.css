@@ -766,7 +766,8 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
   display:block!important;
   left:50%!important;
   top:50%!important;
-  inset:auto!important;
+  right:auto!important;
+  bottom:auto!important;
   width:40%!important;
   height:40%!important;
   max-width:none!important;
