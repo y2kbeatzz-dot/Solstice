@@ -2,7 +2,7 @@
 
 ### Your music. In full color.
 
-**Solstice 3.1.14** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
+**Solstice 3.1.15** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
 
 **🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
 
@@ -19,8 +19,8 @@
 - **Solstice Updater** — an in-theme Studio tab that checks the latest public release, opens Marketplace, and backs up/restores Studio settings and edited lyrics.
 - **Lightweight playback updates** — shared lyric timing and cached rendering.
 
-## Version 3.1.14
+## Version 3.1.15
 
-Solstice Studio's **Updater** now offers **Refresh Marketplace listing** to reload cached theme descriptions while preserving Studio preferences and edited lyrics. The updater compares the separate release version in the public manifest; the Marketplace description no longer needs to change for each release. All prior features remain.
+Fixes the blank gray explicit badge by drawing a high-contrast **E** on Spotify's badge container. The Studio Updater, saved settings and lyrics, immersive effects, and all previous features remain.
 
 Built for the Spicetify community. Not affiliated with Spotify or Spicetify.
