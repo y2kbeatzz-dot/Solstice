@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.30 — animated lyrics with 8 font choices and true word-by-word karaoke from imported Enhanced LRC or optional NetEase YRC/klyric, with LRCLIB line-sync fallback. Plus responsive vinyl, needle and Studio.",
-  "preview": "preview-v3.1.30.svg",
+  "description": "Solstice 3.1.31 — animated lyrics with 8 font choices and true word-by-word karaoke from imported Enhanced LRC or optional NetEase YRC/klyric, with LRCLIB line-sync fallback. Plus responsive vinyl, needle and Studio.",
+  "preview": "preview-v3.1.31.svg",
   "readme": "README.md",
-  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@fe260cb0523cade6df50417ff8fad04f7fcf0dc2/user.css",
+  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@198f00cafe9a28133b588f32cc2bd2dcd10e1676/user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@fe260cb0523cade6df50417ff8fad04f7fcf0dc2/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@198f00cafe9a28133b588f32cc2bd2dcd10e1676/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.30"
+  "version": "3.1.31"
 }
