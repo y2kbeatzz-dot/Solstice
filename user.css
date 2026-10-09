@@ -532,62 +532,6 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 }
 
 
-/* Solstice 3.1.15: render the native Spotify Explicit marker reliably.
-   The explicit icon uses .main-tag-container; it is NOT guaranteed to have
-   a title or aria-label. A pseudo-element makes the E independent of Spotify
-   glyph-font updates and remains visible over the native gray square. */
-.Root__main-view .main-tag-container,
-.Root__main-view [data-testid="track-row-explicit-badge"],
-.Root__main-view [data-testid="explicit-badge"] {
-  box-sizing:border-box!important;
-  position:relative!important;
-  display:inline-flex!important;
-  vertical-align:middle!important;
-  justify-content:center!important;
-  align-items:center!important;
-  flex:0 0 18px!important;
-  width:18px!important;
-  min-width:18px!important;
-  height:18px!important;
-  min-height:18px!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:3px!important;
-  background:#adb8bd!important;
-  background-image:none!important;
-  color:#17242b!important;
-  font:800 11px/1 Arial,Helvetica,sans-serif!important;
-  opacity:1!important;
-  visibility:visible!important;
-  overflow:visible!important;
-}
-.Root__main-view .main-tag-container::after,
-.Root__main-view [data-testid="track-row-explicit-badge"]::after,
-.Root__main-view [data-testid="explicit-badge"]::after {
-  content:"E"!important;
-  box-sizing:border-box!important;
-  position:absolute!important;
-  inset:0!important;
-  z-index:2!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  width:100%!important;
-  height:100%!important;
-  padding:0!important;
-  border-radius:3px!important;
-  background:#adb8bd!important;
-  color:#17242b!important;
-  -webkit-text-fill-color:#17242b!important;
-  font:900 11px/1 Arial,Helvetica,sans-serif!important;
-  letter-spacing:0!important;
-  text-indent:0!important;
-  text-shadow:none!important;
-  opacity:1!important;
-  visibility:visible!important;
-  pointer-events:none!important;
-}
-
 /* Solstice 3.1.14: the updater is part of Studio, not a separate overlay. */
 #sol-body #sol-updater-version{
   font-weight:800;
@@ -608,57 +552,48 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 #sol-body #sol-updater-check:disabled{opacity:.65;cursor:wait;}
 #sol-body #sol-updater-open{border-color:rgba(var(--sol-rgb),.52);}
 
-
-/* Solstice 3.1.16 — current Spotify explicit tag fix.
-   Verified markup: <span class="x-explicit-label" aria-label="Explicit" title="Explicit">.
-   Earlier versions targeted legacy .main-tag-container and therefore missed
-   Spotify's present badge. Keep the native accessible label; render E visibly. */
-span.x-explicit-label[aria-label="Explicit"],
-span.x-explicit-label[title="Explicit"] {
-  box-sizing:border-box!important;
-  position:relative!important;
+/* Solstice 3.1.17: Spotify's explicit badge is a wrapper + child.
+   Confirmed structure: <span class="x-explicit-label" aria-label="Explicit">
+     <span class="x-explicit-icon">E</span>
+   </span>
+   The original .x-explicit-label color uses --background-base. Solstice sets
+   --background-base:transparent globally for glass, which makes the E vanish.
+   Override that token only in the explicit badge and restore the CHILD text.
+   No synthetic pseudo-elements or changes to unrelated Spotify metadata. */
+.Root__main-view span.x-explicit-label[aria-label="Explicit"],
+.Root__main-view span.x-explicit-label[title="Explicit"] {
+  --background-base:#17242c!important;
+  --text-subdued:#acb9bd!important;
   display:inline-flex!important;
-  flex:0 0 18px!important;
   align-items:center!important;
   justify-content:center!important;
+  flex-shrink:0!important;
+  box-sizing:border-box!important;
   width:18px!important;
   min-width:18px!important;
   height:18px!important;
   min-height:18px!important;
   padding:0!important;
-  border:0!important;
   border-radius:2px!important;
-  background:#aebbc0!important;
-  background-image:none!important;
-  color:#101d25!important;
-  font-size:0!important;
+  background:#acb9bd!important;
+  color:#17242c!important;
+  -webkit-text-fill-color:#17242c!important;
+  font-size:11px!important;
   line-height:1!important;
-  vertical-align:middle!important;
-  overflow:hidden!important;
   opacity:1!important;
   visibility:visible!important;
 }
-span.x-explicit-label[aria-label="Explicit"]::after,
-span.x-explicit-label[title="Explicit"]::after {
-  content:"E"!important;
-  box-sizing:border-box!important;
-  display:flex!important;
-  position:absolute!important;
-  inset:0!important;
-  z-index:3!important;
-  align-items:center!important;
-  justify-content:center!important;
-  width:100%!important;
-  height:100%!important;
-  border-radius:inherit!important;
-  background:#aebbc0!important;
-  color:#101d25!important;
-  -webkit-text-fill-color:#101d25!important;
+.Root__main-view span.x-explicit-label .x-explicit-icon {
+  display:inline-block!important;
+  flex:none!important;
+  color:#17242c!important;
+  -webkit-text-fill-color:#17242c!important;
   font:900 11px/1 Arial,Helvetica,sans-serif!important;
-  text-shadow:none!important;
-  text-indent:0!important;
   letter-spacing:0!important;
+  text-indent:0!important;
+  text-shadow:none!important;
   opacity:1!important;
   visibility:visible!important;
-  pointer-events:none!important;
 }
+/* Remove all old false-positive label rules; they styled the container only. */
+
