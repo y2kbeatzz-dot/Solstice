@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.24 restores a realistic 33⅓ RPM vinyl motor, keeping the record spinning with self-contained fallback CSS even if Marketplace has stale styles. Includes animated needle, album label, lyrics and Studio.",
-  "preview": "preview-v3.1.24.svg",
+  "description": "Solstice 3.1.25 — Immersive turntable matches preview: realistic black grooved record, centered 40% album-art label, silver animated right-side tonearm, smooth 33⅓ RPM spin, synced lyrics, glass and Studio.",
+  "preview": "preview-v3.1.25.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@main/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@5a85720a63beaf1cf34caeb1b23e132f2db7bead/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.24"
+  "version": "3.1.25"
 }
