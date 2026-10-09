@@ -208,14 +208,25 @@
     style();
   }
 
+  // Enhanced LRC (<mm:ss.xxx>word) adds genuine word timestamps.
   function parseLRC(text) {
-    const rows = [];
-    for (const line of String(text || '').split(/\r?\n/)) {
-      const marks = [...line.matchAll(/\[(\d{1,3}):(\d{2})(?:\.(\d{1,3}))?\]/g)];
-      const words = line.replace(/\[(\d{1,3}):(\d{2})(?:\.(\d{1,3}))?\]/g,'').trim();
-      for (const m of marks) if (words) rows.push({ t: (+m[1]*60 + +m[2])*1000 + Number((m[3]||'0').padEnd(3,'0')), text: words });
+    const rows = [], stamp = /\[(\d{1,3}):(\d{2})(?:\.(\d{1,3}))?\]/g;
+    const inline = /<(\d{1,3}):(\d{2})(?:\.(\d{1,3}))?>/g;
+    const ms = m => (+m[1]*60 + +m[2])*1000 + Number((m[3]||'0').padEnd(3,'0'));
+    for (const raw of String(text || '').split(/\r?\n/)) {
+      const tags = [...raw.matchAll(stamp)];
+      if (!tags.length) continue;
+      const body = raw.replace(stamp,'');
+      const tokens = [...body.matchAll(inline)];
+      const words = tokens.map((m,i) => ({
+        t:ms(m),text:body.slice(m.index+m[0].length,tokens[i+1]?.index ?? body.length)
+      })).filter(w=>w.text && Number.isFinite(w.t));
+      const plain = body.replace(inline,'').trim();
+      for (const tag of tags) if (plain) rows.push({
+        t:ms(tag),text:plain,words:words.length>=2?words:null
+      });
     }
-    return rows.sort((a,b) => a.t-b.t);
+    return rows.sort((a,b)=>a.t-b.t);
   }
   // Lyrics change on track changes or an edit, not every playback tick.
   // Cache parsed LRC data to avoid reparsing every 800 ms per visible pane.
@@ -249,7 +260,7 @@
     if (box.dataset.signature !== fingerprint) {
       box.dataset.signature = fingerprint;
       box.dataset.active = '';
-      box.innerHTML = lines.length ? lines.map((l,i) => `<p class="sol-line" data-line="${i}"><span class="sol-line-text">${esc(l.text)}</span></p>`).join('') :
+      box.innerHTML = lines.length ? lines.map((l,i) => `<p class="sol-line" data-line="${i}"><span class="sol-line-text">${l.words?.length ? l.words.map((w,j)=>'<span class="sol-word" data-word="'+j+'">'+esc(w.text)+'</span>').join('') : esc(l.text)}</span></p>`).join('') :
         data ? '<p class="sol-untimed">' + esc(data).replace(/\n/g,'<br>') + '</p>' :
           '<p class="sol-empty">No synchronized lyrics yet. Try fetching them in Studio.</p>';
     }
@@ -262,10 +273,25 @@
         current?.classList.add('sol-active');
         if (variant === 'sidebar' || variant === 'immersive') centerLyricInBox(box,current);
       }
+      // True per-word progress only when the provider supplied explicit timestamps.
+      if (index >= 0 && prefs.dynamicLyrics && prefs.karaoke && lines[index].words?.length) {
+        const tokens=lines[index].words;
+        const current=box.querySelector('[data-line="'+index+'"]');
+        if (current) for(const span of current.querySelectorAll('.sol-word')){
+          const j=Number(span.dataset.word), word=tokens[j];
+          if (!word) continue;
+          const end=tokens[j+1]?.t ?? lines[index+1]?.t ?? word.t+700;
+          const pct=Math.round(100*clamp((position-word.t)/Math.max(end-word.t,1),0,1,0));
+          if(span.dataset.fill!==String(pct)){
+            span.dataset.fill=String(pct);
+            span.style.setProperty('--sol-word-progress',pct+'%');
+          }
+        }
+      }
       // A line-timed LRC file does not contain word timestamps; gently fill
       // the current line from left to right between real line time markers.
       // Update only the active span and only when the percentage changes.
-      if (index >= 0 && prefs.dynamicLyrics && prefs.karaoke) {
+      if (index >= 0 && prefs.dynamicLyrics && prefs.karaoke && !lines[index].words?.length) {
         const current = box.querySelector(`[data-line="${index}"] .sol-line-text`);
         if (current) {
           const start = lines[index].t;
