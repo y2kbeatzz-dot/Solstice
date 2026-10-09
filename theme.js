@@ -1,0 +1,665 @@
+/* Solstice 3.1.7 — performance pass on immersive Spicetify theme. Original Solstice v2 lyrics/editor preserved and expanded. */
+(() => {
+  'use strict';
+  if (window.__solstice3) return;
+  window.__solstice3 = true;
+
+  const KEY = 'solstice-v3-prefs';
+  const OLD_KEY = 'solstice-v2-prefs';
+  const LYRICS = 'solstice-v2-lyrics'; // Retain all locally saved v2.x lyrics.
+  const defaults = {
+    accent: '#63e6ce', autoColor: true,
+    blur: 18, glassOpacity: 16, artBlur: 12, glowStrength: 60, lyricSize: 13,
+    artMotion: true, artMode: 'drift', vinyl: true, visualizer: true,
+    karaoke: true, miniPlayer: false, autoLyrics: true, showPopups: true,
+    ambientTint: 32, radius: 20, reducedMotion: false
+  };
+  const rgbHex = hex => [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)).join(',');
+  const readJSON = (key, backup) => { try { const x = JSON.parse(localStorage.getItem(key)); return x && typeof x === 'object' ? x : backup; } catch { return backup; } };
+  const old = readJSON(OLD_KEY, {});
+  const prefs = Object.assign({}, defaults, {
+    blur: old.blur, glassOpacity: old.glassOpacity, artBlur: old.artBlur,
+    lyricSize: old.lyricSize, glowStrength: old.glowStrength, radius: old.radius,
+    autoLyrics: old.autoLyrics, showPopups: old.showPopups, artMotion: old.artMotion
+  }, readJSON(KEY, {}));
+  // Avoid undefined settings from earlier releases overwriting new defaults.
+  for (const key of Object.keys(defaults)) if (prefs[key] === undefined || prefs[key] === null) prefs[key] = defaults[key];
+  // Ignore any old look selection and always follow the current cover artwork.
+  delete prefs.preset;
+  prefs.autoColor = true;
+  const savedLyrics = readJSON(LYRICS, {});
+  const lyricCache = new Map();
+  const root = document.documentElement;
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clamp = (v, lo, hi, fallback) => Number.isFinite(+v) ? Math.max(lo, Math.min(hi, +v)) : fallback;
+  const $ = (selector, context = document) => context.querySelector(selector);
+  const make = (html) => { const box = document.createElement('template'); box.innerHTML = html.trim(); return box.content.firstElementChild; };
+  const validHex = v => /^#[a-f\d]{6}$/i.test(String(v)) ? String(v) : null;
+  const fmt = ms => { const sec = Math.max(0, Math.floor((+ms || 0) / 1000)); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0'); };
+  let currentId = '', lastCover = '', lookupTimer, fetchAbort, studioTab = 'overview', studioClock, lastLyricKey = '', lastSideKey = '';
+  let artworkGeneration = 0, lastColorStatus = 'Waiting for a song', lastLyricStatus = 'Play a track to fetch lyrics';
+  let initialized = false, timer = null, eventBound = false, lastNowPlaying = '', dragState = null;
+
+  function player() { return window.Spicetify?.Player; }
+  function isPlaying() { try { return !!player()?.isPlaying?.(); } catch { return false; } }
+  function progress() { try { return Math.max(0, Number(player()?.getProgress?.() ?? 0)); } catch { return 0; } }
+  function duration() { try { return Math.max(0, Number(player()?.getDuration?.() ?? 0)); } catch { return 0; } }
+  function track() {
+    const state = player()?.data;
+    const x = state?.item || state?.track || {};
+    const meta = x.metadata || {};
+    const a = Array.isArray(x.artists) ? x.artists : Array.isArray(x.album?.artists) ? x.album.artists : [];
+    const artist = a.map(i => i.name).filter(Boolean).join(', ') || meta.artist_name || meta.artist || 'Spotify';
+    const images = x.album?.images || x.images || [];
+    let cover = images.find(i => i?.url || i?.uri)?.url || images[0]?.uri || x.image_url || meta.image_url || '';
+    if (!cover) cover = $('[data-testid="cover-art-image"]')?.src || $('.main-nowPlayingWidget-coverArt img')?.src || '';
+    if (cover.startsWith('spotify:image:')) cover = 'https://i.scdn.co/image/' + cover.slice(14);
+    if (cover.startsWith('spotify:mosaic:')) cover = 'https://mosaic.scdn.co/640/' + cover.slice(15).replace(/:/g, '');
+    if (!/^https?:\/\//i.test(cover)) cover = '';
+    return { uri: x.uri || x.id || '', title: x.name || meta.title || 'Nothing playing', artist,
+      album: x.album?.name || meta.album_title || '', cover, duration: Math.round(duration()/1000) || Math.round((x.duration?.milliseconds || x.duration || 0)/1000) };
+  }
+  function trackKey() { return track().uri || 'manual'; }
+  function trackSignature(t = track()) { return [t.uri, t.title, t.artist].join('|'); }
+
+  function style() {
+    prefs.autoColor = true;
+    const accent = validHex(prefs.accent) || '#63e6ce';
+    const rgb = [1,3,5].map(i => parseInt(accent.slice(i,i+2),16));
+    const surface = [12, 19, 28]; // Neutral dark glass; cover drives all colored lighting.
+    const values = {
+      '--sol-accent': accent, '--sol-rgb': rgb.join(','), '--sol-panel-rgb': surface.join(','),
+      '--sol-second-rgb': rgb.join(','), '--sol-third-rgb': rgb.join(','),
+      '--sol-blur': clamp(prefs.blur, 0, 45, 18) + 'px', '--sol-glass-alpha': (clamp(prefs.glassOpacity, 0, 80, 16)/100).toFixed(2),
+      '--sol-art-blur': clamp(prefs.artBlur, 0, 55, 12) + 'px', '--sol-ambient-alpha': (clamp(prefs.ambientTint,0,85,32)/100).toFixed(2),
+      '--sol-glow-strength': (clamp(prefs.glowStrength,0,100,60)/100).toFixed(2),
+      '--sol-lyric-size': clamp(prefs.lyricSize,11,22,13) + 'px', '--sol-radius': clamp(prefs.radius,8,36,20) + 'px',
+      '--spice-button': accent, '--spice-button-active': accent, '--spice-text-bright-accent': accent,
+      '--text-bright-accent': accent, '--essential-bright-accent': accent
+    };
+    for (const [key,val] of Object.entries(values)) root.style.setProperty(key,val);
+    root.dataset.solArtMode = ['drift','zoom','still'].includes(prefs.artMode) ? prefs.artMode : 'drift';
+    root.removeAttribute('data-sol-preset');
+    root.classList.toggle('sol-motion-off', !prefs.artMotion || prefs.reducedMotion);
+    root.classList.toggle('sol-paused', !isPlaying());
+    root.classList.remove('sol-vinyl-off');
+    root.classList.toggle('sol-viz-off', !prefs.visualizer);
+    root.classList.toggle('sol-karaoke-off', !prefs.karaoke);
+    root.classList.toggle('sol-reduced-motion', !!prefs.reducedMotion);
+    $('#sol-mini')?.classList.toggle('sol-hidden', !prefs.miniPlayer);
+    $('#sol-immersive')?.classList.toggle('sol-no-viz', !prefs.visualizer);
+    try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch {}
+  }
+  const setPref = (name, value) => { prefs[name] = value; style(); };
+  function notify(message) {
+    if (!prefs.showPopups) return;
+    $('#sol-toast')?.remove();
+    const el = make('<div id="sol-toast" role="status">♫ <span>' + esc(message) + '</span></div>');
+    document.body.append(el);
+    requestAnimationFrame(() => el.classList.add('sol-show'));
+    setTimeout(() => { el.classList.remove('sol-show'); setTimeout(() => el.remove(), 400); }, 3400);
+  }
+
+  // Mount behind the actual Spotify .Root grid, not behind Spotify's entire opaque web app.
+  function mountArtwork() {
+    const host = $('.Root') || $('#main');
+    if (!host) return null;
+    let stage = $('#sol-art-stage');
+    if (!stage) stage = make('<div id="sol-art-stage" aria-hidden="true"><div class="sol-art-gradient"></div><div class="sol-art-shade"></div></div>');
+    if (stage.parentElement !== host) host.prepend(stage);
+    return stage;
+  }
+  function redrawArtwork() {
+    const stage = mountArtwork(); if (!stage) return;
+    const t = track();
+    if (!t.cover || t.cover === lastCover) return;
+    lastCover = t.cover;
+    const next = document.createElement('div');
+    next.className = 'sol-art-frame';
+    next.style.backgroundImage = 'url(' + JSON.stringify(t.cover) + ')';
+    stage.insertBefore(next, $('.sol-art-gradient', stage));
+    requestAnimationFrame(() => requestAnimationFrame(() => next.classList.add('sol-on')));
+    setTimeout(() => { for (const older of stage.querySelectorAll('.sol-art-frame:not(:last-of-type)')) {
+        // Frame order is: frames, gradient, shade. Keep only the most recent artwork frame.
+        if (older !== next) older.remove();
+      }
+      for (const older of stage.querySelectorAll('.sol-art-frame')) if (older !== next) older.remove();
+    }, 1300);
+  }
+  function sampleArtworkColor(src) {
+    // The CDN may deny canvas pixels. Return null without causing a theme crash.
+    return new Promise(resolve => {
+      if (!src || !/^https:\/\//i.test(src)) return resolve(null);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      let settled = false;
+      const finish = color => { if (settled) return; settled = true; resolve(color); };
+      const guard = setTimeout(() => finish(null), 3500);
+      img.onload = () => {
+        clearTimeout(guard);
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 40;
+          const ctx = canvas.getContext('2d', {willReadFrequently: true});
+          if (!ctx) return finish(null);
+          ctx.drawImage(img, 0, 0, 40, 40);
+          const bytes = ctx.getImageData(0, 0, 40, 40).data;
+          let best = null, bestScore = -1e6;
+          for (let y=4; y<36; y+=3) for(let x=4; x<36; x+=3) {
+            const k=(y*40+x)*4, r=bytes[k],g=bytes[k+1],b=bytes[k+2];
+            if(bytes[k+3]<180) continue;
+            const high=Math.max(r,g,b), low=Math.min(r,g,b);
+            const chroma=high-low, bright=(high+low)/2;
+            const score=chroma * 1.3 - Math.abs(bright-150)*.42;
+            if(chroma<28 || bright<48 || bright>232 || score<bestScore)continue;
+            bestScore=score; best=[r,g,b];
+          }
+          finish(best ? '#'+best.map(v=>v.toString(16).padStart(2,'0')).join('') : null);
+        } catch { finish(null); }
+      };
+      img.onerror = () => { clearTimeout(guard); finish(null); };
+      img.src = src;
+    });
+  }
+  async function updatePalette(t) {
+    const ticket=++artworkGeneration;
+    let hex=null, via='';
+    if(t.uri && typeof window.Spicetify?.colorExtractor === 'function') {
+      try {
+        const colors=await window.Spicetify.colorExtractor(t.uri);
+        hex=[colors?.VIBRANT_NON_ALARMING,colors?.VIBRANT,colors?.LIGHT_VIBRANT,colors?.PROMINENT].map(validHex).find(Boolean)||null;
+        if(hex)via='Spicetify';
+      }catch{}
+    }
+    if(ticket!==artworkGeneration)return;
+    if(!hex && t.cover){
+      lastColorStatus='Sampling album art as color fallback…';
+      hex=await sampleArtworkColor(t.cover);
+      if(hex)via='cover pixel sampler';
+    }
+    if(ticket!==artworkGeneration)return;
+    if(!hex){lastColorStatus='Artwork colors blocked; last matched accent retained';return;}
+    const rgb=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
+    const peak=Math.max(...rgb);
+    const adjusted=peak<125?rgb.map(c=>Math.min(255,Math.round(c+(125-peak)*.85))):rgb;
+    prefs.accent='#'+adjusted.map(c=>c.toString(16).padStart(2,'0')).join('');
+    lastColorStatus='Matched to artwork ('+via+')';
+    style();
+  }
+
+  function parseLRC(text) {
+    const rows = [];
+    for (const line of String(text || '').split(/\r?\n/)) {
+      const marks = [...line.matchAll(/\[(\d{1,3}):(\d{2})(?:\.(\d{1,3}))?\]/g)];
+      const words = line.replace(/\[(\d{1,3}):(\d{2})(?:\.(\d{1,3}))?\]/g,'').trim();
+      for (const m of marks) if (words) rows.push({ t: (+m[1]*60 + +m[2])*1000 + Number((m[3]||'0').padEnd(3,'0')), text: words });
+    }
+    return rows.sort((a,b) => a.t-b.t);
+  }
+  // Lyrics change on track changes or an edit, not every playback tick.
+  // Cache parsed LRC data to avoid reparsing every 800 ms per visible pane.
+  const parsedLyricsCache = new Map();
+  function cachedLRC(text) {
+    if (parsedLyricsCache.has(text)) return parsedLyricsCache.get(text);
+    const parsed = parseLRC(text);
+    if (parsedLyricsCache.size >= 16) parsedLyricsCache.delete(parsedLyricsCache.keys().next().value);
+    parsedLyricsCache.set(text, parsed);
+    return parsed;
+  }
+  function lyricText() { const t = track(); return savedLyrics[trackKey()] || lyricCache.get(trackSignature(t))?.text || ''; }
+  function activeLyric(lines) { const p = progress(); let index = -1; for (let i=0;i<lines.length;i++) if (p >= lines[i].t) index = i; return index; }
+  // Scroll ONLY the lyric container; scrollIntoView would also move Spotify's page
+  // and even the outer Immersive screen when the active lyric changes.
+  function centerLyricInBox(box, line) {
+    if (!box || !line || box.clientHeight === 0) return;
+    const boxRect = box.getBoundingClientRect();
+    const lineRect = line.getBoundingClientRect();
+    const wanted = box.scrollTop + (lineRect.top + lineRect.height/2) - (boxRect.top + box.clientHeight/2);
+    const limit = Math.max(0, box.scrollHeight - box.clientHeight);
+    const target = Math.max(0, Math.min(limit, wanted));
+    if (Math.abs(box.scrollTop-target) < 2) return;
+    const reduced = prefs.reducedMotion || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    try { box.scrollTo({top:target,behavior:reduced?'instant':'smooth'}); }
+    catch { box.scrollTop=target; }
+  }
+  function drawLyricBox(box, variant) {
+    if (!box) return;
+    const data = lyricText(), lines = cachedLRC(data);
+    const fingerprint = trackKey() + '|' + data;
+    if (box.dataset.signature !== fingerprint) {
+      box.dataset.signature = fingerprint;
+      box.dataset.active = '';
+      box.innerHTML = lines.length ? lines.map((l,i) => `<p class="sol-line" data-line="${i}">${esc(l.text)}</p>`).join('') :
+        data ? '<p class="sol-untimed">' + esc(data).replace(/\n/g,'<br>') + '</p>' :
+          '<p class="sol-empty">No synchronized lyrics yet. Try fetching them in Studio.</p>';
+    }
+    if (lines.length) {
+      const index = activeLyric(lines);
+      if (box.dataset.active !== String(index)) {
+        box.dataset.active = String(index);
+        box.querySelector('.sol-line.sol-active')?.classList.remove('sol-active');
+        const current = box.querySelector(`[data-line="${index}"]`);
+        current?.classList.add('sol-active');
+        if (variant === 'sidebar' || variant === 'immersive') centerLyricInBox(box,current);
+      }
+    }
+  }
+  function updateLyricUI() {
+    drawLyricBox($('#sol-side-lines'), 'sidebar');
+    if (!$('#sol-live-panel')?.hidden) drawLyricBox($('#sol-live-lines'), 'sidebar');
+    if (!$('#sol-overlay')?.hidden && $('#sol-studio-lyrics')) drawLyricBox($('#sol-studio-lyrics'), 'studio');
+    if (!$('#sol-immersive')?.hidden) drawLyricBox($('#sol-immersive-lines'), 'immersive');
+    const status = $('#sol-fetch-status'); if (status && status.textContent !== lastLyricStatus) status.textContent = lastLyricStatus;
+  }
+  async function fetchLyrics(force = false) {
+    const t = track(), key = trackKey(), fingerprint = trackSignature(t);
+    if (!t.uri || t.artist === 'Spotify') { lastLyricStatus='Play a track first.'; updateLyricUI(); return; }
+    if (savedLyrics[key] && !force) { lastLyricStatus='Using your saved lyrics.'; updateLyricUI(); return; }
+    if (lyricCache.has(fingerprint) && !force) { lastLyricStatus=lyricCache.get(fingerprint).message; updateLyricUI(); return; }
+    fetchAbort?.abort();
+    const controller = new AbortController(); fetchAbort=controller;
+    lastLyricStatus='Looking for lyrics on LRCLIB…'; updateLyricUI();
+    try {
+      const params = new URLSearchParams({track_name:t.title,artist_name:t.artist});
+      if (t.album) params.set('album_name',t.album);
+      if (t.duration >= 1 && t.duration <= 3600) params.set('duration',String(t.duration));
+      const response = await fetch('https://lrclib.net/api/get?' + params.toString(), {
+        signal:controller.signal, headers:{'Lrclib-Client':'Solstice/3.0 (Spicetify local theme)'}
+      });
+      if (controller.signal.aborted) return;
+      if (response.status === 429) throw Error('LRCLIB is rate limiting requests');
+      if (response.status === 404) { lyricCache.set(fingerprint,{text:'',message:'No lyrics found; import your own .lrc file.'}); }
+      else {
+        if (!response.ok) throw Error('HTTP ' + response.status);
+        const item = await response.json();
+        const text = item.syncedLyrics || item.plainLyrics || '';
+        lyricCache.set(fingerprint,{text, message:item.syncedLyrics?'Synchronized lyrics loaded.':text?'Untimed lyrics loaded.':'No lyrics available.'});
+      }
+      if (trackSignature()===fingerprint) { lastLyricStatus=lyricCache.get(fingerprint).message; updateLyricUI(); }
+    } catch (e) { if (e.name !== 'AbortError' && trackSignature() === fingerprint) { lastLyricStatus='Lyrics lookup failed ('+e.message+'). You can import lyrics.'; updateLyricUI(); } }
+  }
+  function queueLyrics() { clearTimeout(lookupTimer); fetchAbort?.abort(); if (prefs.autoLyrics) lookupTimer=setTimeout(() => fetchLyrics(),500); }
+
+  // Place lyrics AS A SIBLING of native Now Playing sections, not inside
+  // Spotify's widget grid. Widget grids can lay their children on top of
+  // Related music videos / About the artist instead of reserving space.
+  let sidebarWatcher = null, watchedSidebar = null, sidebarRepairTimer = null;
+  const NATIVE_SIDEBAR_SECTION = '.main-nowPlayingView-section, [class*="nowPlayingView-section"], [data-testid="now-playing-view-section"]';
+  function sidebarScrollHost(right) {
+    // Scrollable containers are ordered by their visible layout, not just by
+    // descendant count (which previously selected an unrelated inner widget).
+    const nodes = Array.from(right.querySelectorAll(
+      '[data-overlayscrollbars-viewport], [class*="scrollNode"], [class*="scroll-node"], [class*="scrollable"], [class*="scrollContainer"], [class*="scroll-container"], [class*="scrollArea"]'
+    )).filter(el => !/sectionHeader|sectionTitle|sectionHeading/i.test(String(el.className || '')) &&
+        !el.closest('#sol-sidebar-lyrics') &&
+      !/scrollbar|scrollBar|ScrollBar/.test(String(el.className || '')));
+    const visible = nodes.filter(el => el.getBoundingClientRect().width > 0);
+    if (visible.length) return visible[0];
+    return right.querySelector('.main-nowPlayingView-nowPlayingView, [data-testid="now-playing-view"]') ||
+      right.firstElementChild || right;
+  }
+  function nativeSections(right) {
+    return Array.from(right.querySelectorAll(NATIVE_SIDEBAR_SECTION))
+      .filter(el => !el.closest('#sol-sidebar-lyrics') &&
+        !el.parentElement?.closest('#sol-sidebar-lyrics') &&
+        // A wrapper around the entire Now Playing route is not a section.
+        el !== right && el.parentElement);
+  }
+  function sidebarPlacement(right) {
+    const widgets = right.querySelector('.main-nowPlayingView-nowPlayingWidgets, [class*="nowPlayingView-nowPlayingWidgets"]');
+    const view = right.querySelector('.main-nowPlayingView-nowPlayingView, [data-testid="now-playing-view"]') ||
+      right.querySelector('[class*="nowPlayingView-nowPlayingView"]');
+    const sections = nativeSections(right);
+    if (widgets?.parentElement) {
+      // The entire widget grid is a React-owned layer. Even adding lyrics as
+      // a sibling of an individual section INSIDE it can cover video/artist
+      // cards. Insert BEFORE the widget grid, at its own parent level.
+      // Now Playing's context (album/track info) remains above both.
+      return { host:widgets.parentElement, before:widgets, sections, widgets, view };
+    }
+    if (sections.length) {
+      const first = sections[0];
+      return { host:first.parentElement, before:first, sections, widgets, view };
+    }
+    if (view) return { host:view, before:null, sections, widgets, view };
+    return { host:sidebarScrollHost(right), before:null, sections, widgets, view };
+  }
+  function sidebarOverlap(card, native) {
+    if (!card.isConnected || !native.isConnected) return false;
+    const a = card.getBoundingClientRect(), b = native.getBoundingClientRect();
+    return a.width > 0 && a.height > 0 && b.width > 0 && b.height > 0 &&
+      a.left < b.right - 4 && b.left < a.right - 4 &&
+      a.top < b.bottom - 4 && b.top < a.bottom - 4;
+  }
+  function mountSidebar() {
+    const right = $('.Root__right-sidebar');
+    if (!right) return;
+    const card = $('#sol-sidebar-lyrics');
+    // Do not inject on queue/device routes when Now Playing isn't visible.
+    const differentRoute = right.querySelector('[data-testid="queue-view"], [data-testid="connect-device-view"], [class*="queue-queue"], [class*="queueQueue"]');
+    const placement = sidebarPlacement(right);
+    if ((!placement.view && !placement.widgets && differentRoute) || !right.children.length) {
+      card?.remove();
+      observeSidebar(right);
+      return;
+    }
+    if (!placement.host) return;
+    let lyricsCard = card;
+    if (!lyricsCard) {
+      lyricsCard = make('<section id="sol-sidebar-lyrics"><div class="sol-side-head"><b>Lyrics</b><button id="sol-sidebar-studio" type="button">↗ Studio</button></div><div id="sol-side-lines" class="sol-lyrics-scroll"></div><small>LRCLIB or your local saved lyrics</small></section>');
+      $('#sol-sidebar-studio', lyricsCard).addEventListener('click',()=>openStudio('lyrics'));
+    }
+    const {host,before,sections,widgets,view} = placement;
+    // Only touch the DOM when the position changed; forcing append every two
+    // seconds can reset native scroll and trigger an unnecessary React repair.
+    if (lyricsCard.parentElement !== host || lyricsCard.nextSibling !== before) {
+      host.insertBefore(lyricsCard, before);
+    }
+    observeSidebar(right);
+    updateLyricUI();
+    // Some Spotify variants use positioned widget sections. After layout,
+    // detect real overlap and move OUTSIDE the widgets rather than trying
+    // to fix it with margins, top offsets, or a higher z-index.
+    requestAnimationFrame(() => {
+      if (!lyricsCard.isConnected || !right.contains(lyricsCard)) return;
+      if (!sections.some(section => sidebarOverlap(lyricsCard, section))) return;
+      const outer = widgets && !widgets.contains(lyricsCard) && widgets.parentElement
+        ? widgets.parentElement : view && !view.contains(lyricsCard) ? view :
+          sidebarScrollHost(right);
+      if (outer && outer !== lyricsCard.parentElement && !lyricsCard.contains(outer)) {
+        outer.append(lyricsCard);
+      } else if (widgets?.parentElement && widgets.parentElement !== lyricsCard.parentElement) {
+        widgets.insertAdjacentElement('afterend',lyricsCard);
+      }
+    });
+  }
+  function observeSidebar(right) {
+    if (right === watchedSidebar) return;
+    sidebarWatcher?.disconnect();
+    watchedSidebar = right;
+    sidebarWatcher = new MutationObserver(records => {
+      // Ignore our own insertions and lyric text changes. Do respond when
+      // Spotify replaces or moves a native Now Playing section.
+      const nativeChange = records.some(record => {
+        if (record.target.nodeType === 1 && record.target.closest('#sol-sidebar-lyrics')) return false;
+        return [...record.addedNodes, ...record.removedNodes].some(node =>
+          node.nodeType === 1 && node.id !== 'sol-sidebar-lyrics' &&
+          !node.closest?.('#sol-sidebar-lyrics'));
+      });
+      if (!nativeChange || sidebarRepairTimer !== null) return;
+      sidebarRepairTimer = setTimeout(() => {
+        sidebarRepairTimer = null;
+        mountSidebar();
+      }, 120);
+    });
+    sidebarWatcher.observe(right, {childList:true,subtree:true});
+  }
+  function mountLiveLyrics() {
+    if ($('#sol-live-panel')) return;
+    const panel=make(`<aside id="sol-live-panel" hidden aria-label="Solstice live lyrics">
+      <header><b>♫ Live lyrics</b><div><button id="sol-live-studio" type="button">Edit ↗</button>
+      <button id="sol-live-close" type="button" aria-label="Close live lyrics">✕</button></div></header>
+      <div id="sol-live-lines" class="sol-lyrics-scroll" aria-live="off"></div>
+      <small>Synchronized to current playback when timed lyrics are available</small>
+    </aside>`);
+    document.body.append(panel);
+    $('#sol-live-studio').onclick=()=>{panel.hidden=true;openStudio('lyrics');};
+    $('#sol-live-close').onclick=()=>{panel.hidden=true;};
+  }
+  function toggleLiveLyrics() {
+    mountLiveLyrics();
+    const panel=$('#sol-live-panel');
+    panel.hidden=!panel.hidden;
+    if(!panel.hidden){updateLyricUI();if(!lyricText()&&prefs.autoLyrics)queueLyrics();}
+  }
+
+  function mountUI() {
+    if ($('#sol-launcher')) return;
+    const launcher = make('<button id="sol-launcher" title="Open Solstice Studio (Ctrl+Alt+S)" type="button">☀ SOLSTICE</button>');
+    launcher.addEventListener('click',()=>openStudio('overview'));
+    document.body.append(launcher);
+    const quick = make(`<nav id="sol-quick-actions" aria-label="Solstice quick controls">
+      <button id="sol-quick-immersive" type="button" title="Open Immersive Mode (Ctrl+Alt+I)">✦ Immersive</button>
+      <button id="sol-quick-lyrics" type="button" title="Show live playback lyrics (Ctrl+Alt+L)">♫ Lyrics</button>
+    </nav>`);
+    document.body.append(quick);
+    $('#sol-quick-immersive').onclick = openImmersive;
+    $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
+    mountLiveLyrics();
+    const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.6</small><h1>☀ Solstice Studio</h1></div></header>
+      <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button></nav>
+      <div id="sol-body"></div></div></div>`);
+    document.body.append(studio);
+    $('#sol-close').addEventListener('click',closeStudio);
+    studio.addEventListener('mousedown',e=>{if (e.target === studio) closeStudio();});
+    studio.querySelectorAll('#sol-tabs button').forEach(btn=>btn.addEventListener('click',()=>renderStudio(btn.dataset.tab)));
+    mountImmersive(); mountMini();
+    window.addEventListener('keydown',e=>{
+      if (e.key === 'Escape') { if (!$('#sol-overlay')?.hidden) closeStudio(); else if (!$('#sol-immersive')?.hidden) closeImmersive(); else if (!$('#sol-live-panel')?.hidden) $('#sol-live-panel').hidden = true; return; }
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 's') { e.preventDefault(); openStudio('overview'); }
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'i') { e.preventDefault(); toggleImmersive(); }
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'l') { e.preventDefault(); toggleLiveLyrics(); }
+    });
+    style();
+  }
+  function openStudio(tab = 'overview') { $('#sol-overlay').hidden=false; renderStudio(tab); }
+  function closeStudio() { $('#sol-overlay').hidden=true; clearInterval(studioClock); studioClock=null; }
+  function labeledRange(label, key, min, max) { return `<label class="sol-control">${label}<input type="range" min="${min}" max="${max}" value="${clamp(prefs[key],min,max,defaults[key])}" data-range="${key}"><output>${esc(prefs[key])}</output></label>`; }
+  function labeledSwitch(label, key, note='') { return `<label class="sol-switch">${label}${note?`<small>${esc(note)}</small>`:''}<input type="checkbox" data-switch="${key}" ${prefs[key]?'checked':''}></label>`; }
+  function renderStudio(tab) {
+    studioTab=tab;
+    const body = $('#sol-body'); if (!body) return;
+    $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
+    const t=track();
+    if (tab === 'overview') {
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.6 · SIDEBAR FIX</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
+      $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
+      $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
+      $('#sol-toggle-mini').onclick=()=>{setPref('miniPlayer',!prefs.miniPlayer);renderStudio('overview');};
+    } else if (tab === 'appearance') {
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card"><h2>Artwork-matched glass</h2><p>All colors follow the current album art automatically. Adjust the sliders while watching the live sample below.</p><div id="sol-effects-demo" aria-label="Glass effects preview"><div id="sol-effects-demo-art"></div><div id="sol-effects-demo-glass"><b>Solstice glass</b><small>Live blur · opacity · glow</small></div></div>${labeledRange('Glass opacity (%)','glassOpacity',0,80)}${labeledRange('Glass blur (px)','blur',0,45)}${labeledRange('Corner radius (px)','radius',8,36)}
+       ${labeledRange('Glow strength (%)','glowStrength',0,100)}</section><section class="sol-card"><h2>Living backgrounds</h2>
+       ${labeledSwitch('Moving album art','artMotion')}${labeledRange('Album art blur (px)','artBlur',0,55)}${labeledRange('Background dimming (%)','ambientTint',0,85)}
+       <label class="sol-control">Artwork animation <select data-select="artMode"><option value="drift">Slow drift</option><option value="zoom">Breathing zoom</option><option value="still">Still image</option></select></label>
+       ${labeledRange('Sidebar lyric size (px)','lyricSize',11,22)}${labeledSwitch('Reduced motion','reducedMotion','Stops continuous motion without losing color or glass.')}
+       <div class="sol-actions"><button id="sol-refresh">Refresh artwork</button></div></section></div>`;
+      $('[data-select="artMode"]',body).value=prefs.artMode;
+      const preview=$('#sol-effects-demo-art');
+      if(preview && t.cover)preview.style.backgroundImage='url('+JSON.stringify(t.cover)+')';
+      $('#sol-refresh',body).onclick=()=>{lastCover='';redrawArtwork();updatePalette(track());notify('Artwork refreshed');};
+    } else if (tab === 'experience') {
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card"><h2>Immersive listening</h2><p>Full-window artwork, big lyrics and a playback-reactive ambient visualizer.</p>
+        ${labeledSwitch('Karaoke lyric highlighting','karaoke')}${labeledSwitch('Animated ambient bars','visualizer','Animation follows play/pause; actual audio spectrum is unavailable.')}
+        <button id="sol-experience-open" class="sol-primary">Launch Immersive Mode</button></section><section class="sol-card"><h2>Your player</h2>
+        ${labeledSwitch('Draggable floating mini player','miniPlayer','Mini player lives inside the Spotify window.')}${labeledSwitch('Automatic LRCLIB lyrics','autoLyrics')}${labeledSwitch('Track notifications','showPopups')}
+        <p class="sol-note">Keyboard: Ctrl+Alt+I toggles Immersive, Ctrl+Alt+S opens Studio, Escape closes.</p></section></div>`;
+      $('#sol-experience-open').onclick=()=>{closeStudio();openImmersive();};
+    } else if (tab === 'lyrics') {
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card"><span class="sol-pill">LRCLIB + LOCAL LRC</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p id="sol-fetch-status" class="sol-note">${esc(lastLyricStatus)}</p><div id="sol-studio-lyrics" class="sol-lyrics-scroll"></div><div class="sol-actions"><button id="sol-fetch">Fetch lyrics</button><button id="sol-sync">Sync display</button><button id="sol-clear">Remove saved lyrics</button></div></section>
+      <section class="sol-card"><h2>Lyrics editor</h2><p>Timed format: <code>[00:12.50] First line</code>. Original v2.x edits are kept.</p><textarea id="sol-editor" spellcheck="false" placeholder="[00:00.00] First line&#10;[00:04.25] Second line">${esc(savedLyrics[trackKey()]||'')}</textarea>
+      <div class="sol-actions"><button id="sol-save" class="sol-primary">Save lyrics</button><button id="sol-import">Import .lrc</button><input type="file" id="sol-lyricfile" accept=".lrc,.txt" hidden></div><p class="sol-note">Saved edits override LRCLIB and stay on this PC.</p></section></div>`;
+      $('#sol-fetch').onclick=()=>fetchLyrics(true);
+      $('#sol-sync').onclick=updateLyricUI;
+      $('#sol-save').onclick=()=>{savedLyrics[trackKey()]=$('#sol-editor').value;try{localStorage.setItem(LYRICS,JSON.stringify(savedLyrics));}catch{}updateLyricUI();notify('Local lyrics saved');};
+      $('#sol-clear').onclick=()=>{delete savedLyrics[trackKey()];try{localStorage.setItem(LYRICS,JSON.stringify(savedLyrics));}catch{}$('#sol-editor').value='';updateLyricUI();};
+      $('#sol-import').onclick=()=>$('#sol-lyricfile').click();
+      $('#sol-lyricfile').onchange=async e=>{const f=e.target.files?.[0];if (f && f.size < 1_000_000) $('#sol-editor').value=await f.text();};
+      updateLyricUI();
+      if (prefs.autoLyrics && !lyricCache.has(trackSignature(t)) && !savedLyrics[trackKey()]) queueLyrics();
+    } else if (tab === 'status') {
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card"><h2>Effect diagnostics</h2><p>Spicetify Player: <strong id="sol-status-player"></strong></p><p>Artwork: <strong id="sol-status-art"></strong></p><p>Cover colors: <strong id="sol-status-color"></strong></p><p>LRCLIB: <strong id="sol-status-lyrics"></strong></p><p>Current route: <strong id="sol-status-route"></strong></p><div class="sol-actions"><button id="sol-test-effects">Recheck & refresh effects</button></div></section><section class="sol-card"><h2>Recovery</h2><p>Reset appearance without deleting saved lyrics, or restore the previous installed theme using UNINSTALL.cmd.</p><button id="sol-reset-prefs">Reset appearance preferences</button><p class="sol-note">If Spotify changes its DOM after an update, rerun INSTALL.cmd or consult the README.</p></section></div>`;
+      $('#sol-test-effects').onclick=()=>{lastCover='';redrawArtwork();updatePalette(track());renderDiagnostics();};
+      $('#sol-reset-prefs').onclick=()=>{Object.assign(prefs,defaults);style();lastCover='';redrawArtwork();updatePalette(track());renderStudio('appearance');};
+      renderDiagnostics();
+    }
+    $$('[data-range]',body).forEach(el=>{
+      const onChange=()=>{setPref(el.dataset.range,Number(el.value));const output=el.closest('label')?.querySelector('output');if(output)output.textContent=el.value;};
+      el.addEventListener('input',onChange);el.addEventListener('change',onChange);
+    });
+    $$('[data-switch]',body).forEach(el=>el.onchange=()=>{setPref(el.dataset.switch,el.checked);if(el.dataset.switch==='autoLyrics'&&el.checked)queueLyrics();});
+    $$('[data-select]',body).forEach(el=>el.onchange=()=>setPref(el.dataset.select,el.value));
+  }
+  function $$(selector, ctx=document) { return [...ctx.querySelectorAll(selector)]; }
+  function renderDiagnostics() {
+    if (studioTab !== 'status' || $('#sol-overlay')?.hidden) return;
+    const write=(id,val)=>{const el=$('#'+id);if(el)el.textContent=val;};
+    write('sol-status-player',player()?'Connected':'Waiting');
+    write('sol-status-art',$('#sol-art-stage .sol-art-frame')?'Layer active':track().cover?'Cover found but waiting':'No cover currently available');
+    write('sol-status-color',lastColorStatus);
+    write('sol-status-lyrics',lastLyricStatus);
+    write('sol-status-route',location.pathname || '/');
+  }
+
+  function mountImmersive() {
+    if ($('#sol-immersive')) return;
+    const el = make(`<section id="sol-immersive" hidden aria-label="Solstice Immersive Mode">
+      <div class="sol-immersive-bg"></div><div class="sol-immersive-shade"></div>
+      <header class="sol-immersive-top"><strong>☀ SOLSTICE <span>IMMERSIVE</span></strong><div class="sol-actions"><button id="sol-immersive-fullscreen" type="button" aria-label="Toggle system fullscreen">⛶ Fullscreen</button><button id="sol-immersive-exit" type="button" aria-label="Close immersive mode">✕ Close</button></div></header><p id="sol-fullscreen-status" role="status" hidden></p>
+      <div class="sol-immersive-center"><div class="sol-vinyl-area"><div id="sol-vinyl"><img id="sol-immersive-art" alt="Current album artwork"><div class="sol-vinyl-label"></div></div><div id="sol-ambient-bars" aria-label="Ambient playback animation"></div></div>
+      <div class="sol-immersive-details"><div class="sol-pill">NOW PLAYING</div><h1 id="sol-immersive-title">Nothing playing</h1><p id="sol-immersive-artist">Start a song</p><div id="sol-immersive-lines" class="sol-lyrics-scroll"></div></div></div>
+      <footer class="sol-immersive-controls"><button id="sol-immersive-back" aria-label="Previous track" type="button">⏮</button><button id="sol-immersive-play" aria-label="Play or pause" type="button">▶</button><button id="sol-immersive-next" aria-label="Next track" type="button">⏭</button><span id="sol-immersive-position">0:00</span><input id="sol-immersive-seek" aria-label="Seek position" type="range" min="0" max="1000" value="0"><span id="sol-immersive-length">0:00</span></footer></section>`);
+    document.body.append(el);
+    $('#sol-immersive-exit').onclick=closeImmersive;
+    $('#sol-immersive-fullscreen').onclick=toggleSystemFullscreen;
+    document.addEventListener('fullscreenchange',syncFullscreenState);
+    $('#sol-immersive-play').onclick=()=>player()?.togglePlay?.();
+    $('#sol-immersive-back').onclick=()=>player()?.back?.();
+    $('#sol-immersive-next').onclick=()=>player()?.next?.();
+    $('#sol-immersive-seek').addEventListener('change',e=>{if(duration()>0)player()?.seek?.(Math.round(duration()*Number(e.target.value)/1000));});
+    $('#sol-ambient-bars').innerHTML=Array.from({length:24},(_,i)=>`<i style="--i:${i};--h:${10+((i*13+7)%28)}"></i>`).join('');
+  }
+  function showFullscreenStatus(message) {
+    const status=$('#sol-fullscreen-status'); if(!status)return;
+    status.textContent=message;status.hidden=!message;
+  }
+  function syncFullscreenState(){
+    const active=!!document.fullscreenElement;
+    const button=$('#sol-immersive-fullscreen');
+    if(button){button.textContent=active?'⛶ Exit fullscreen':'⛶ Fullscreen';button.setAttribute('aria-pressed',String(active));}
+    if(active)showFullscreenStatus('');
+  }
+  async function toggleSystemFullscreen(){
+    const el=$('#sol-immersive');if(!el)return;
+    try {
+      if(document.fullscreenElement){
+        if(typeof document.exitFullscreen!=='function')throw new Error('Fullscreen exit unavailable');
+        await document.exitFullscreen();
+      } else {
+        if(typeof el.requestFullscreen!=='function')throw new Error('Fullscreen API unavailable');
+        await el.requestFullscreen({navigationUI:'hide'});
+        if(document.fullscreenElement!==el)throw new Error('Spotify did not enter fullscreen');
+      }
+      syncFullscreenState();
+    } catch(error){
+      showFullscreenStatus('Spotify blocked system fullscreen. Immersive still fills the Spotify window; maximize Spotify to enlarge it.');
+      syncFullscreenState();
+      console.warn('[Solstice] Fullscreen request unavailable:',error);
+    }
+  }
+  function openImmersive() {
+    const el=$('#sol-immersive');if(!el)return;
+    el.hidden=false;
+    showFullscreenStatus('');syncFullscreenState();
+    updateTrackDisplays();updateLyricUI();
+  }
+  function closeImmersive() {
+    const el=$('#sol-immersive');if(!el)return;
+    if(document.fullscreenElement===el && document.exitFullscreen) Promise.resolve(document.exitFullscreen()).catch(()=>{});
+    el.hidden=true;
+  }
+  function toggleImmersive(){if($('#sol-immersive')?.hidden)openImmersive();else closeImmersive();}
+
+  function mountMini() {
+    if ($('#sol-mini')) return;
+    const el=make(`<aside id="sol-mini" class="sol-hidden" aria-label="Solstice floating mini player"><div id="sol-mini-handle" title="Drag mini player"><span>✦ SOLSTICE</span><button id="sol-mini-close" type="button" aria-label="Hide mini player">✕</button></div><div class="sol-mini-content"><img id="sol-mini-art" alt="Album art"><div><b id="sol-mini-title">Nothing playing</b><small id="sol-mini-artist">Spotify</small></div></div><div class="sol-mini-controls"><button id="sol-mini-back" aria-label="Previous">⏮</button><button id="sol-mini-play" aria-label="Play or pause">▶</button><button id="sol-mini-next" aria-label="Next">⏭</button><button id="sol-mini-immersive" aria-label="Immersive Mode">⛶</button></div><div class="sol-mini-progress"><input id="sol-mini-seek" type="range" aria-label="Seek position" min="0" max="1000" value="0"></div></aside>`);
+    document.body.append(el);
+    $('#sol-mini-close').onclick=()=>setPref('miniPlayer',false);
+    $('#sol-mini-back').onclick=()=>player()?.back?.();
+    $('#sol-mini-play').onclick=()=>player()?.togglePlay?.();
+    $('#sol-mini-next').onclick=()=>player()?.next?.();
+    $('#sol-mini-immersive').onclick=openImmersive;
+    $('#sol-mini-seek').onchange=e=>{if(duration()>0)player()?.seek?.(Math.round(duration()*Number(e.target.value)/1000));};
+    const handle=$('#sol-mini-handle');
+    handle.addEventListener('pointerdown', e=>{
+      if(e.button!==0 || e.target.closest('button'))return;
+      const rect=el.getBoundingClientRect();
+      dragState={id:e.pointerId,x:e.clientX,y:e.clientY,left:rect.left,top:rect.top};
+      try{handle.setPointerCapture(e.pointerId);}catch{}
+      e.preventDefault();
+    });
+    handle.addEventListener('pointermove',e=>{
+      if(!dragState || e.pointerId!==dragState.id)return;
+      el.style.right='auto';el.style.bottom='auto';
+      el.style.left=clamp(dragState.left+(e.clientX-dragState.x),0,Math.max(0,innerWidth-el.offsetWidth),0)+'px';
+      el.style.top=clamp(dragState.top+(e.clientY-dragState.y),0,Math.max(0,innerHeight-el.offsetHeight),0)+'px';
+    });
+    const end=()=>{dragState=null;};
+    handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);
+    window.addEventListener('resize',()=>{
+      if(el.style.left)el.style.left=clamp(parseFloat(el.style.left),0,Math.max(0,innerWidth-el.offsetWidth),0)+'px';
+      if(el.style.top)el.style.top=clamp(parseFloat(el.style.top),0,Math.max(0,innerHeight-el.offsetHeight),0)+'px';
+    });
+  }
+  function updateTrackDisplays() {
+    const t = track();
+    const setText=(id,value)=>{const el=$('#'+id);if(el && el.textContent !== value)el.textContent=value;};
+    setText('sol-immersive-title',t.title);
+    setText('sol-immersive-artist',t.artist);
+    setText('sol-mini-title',t.title);
+    setText('sol-mini-artist',t.artist);
+    for(const id of ['sol-mini-art','sol-immersive-art']){
+      const img=$('#'+id);if(img && img.dataset.cover !== t.cover){img.dataset.cover=t.cover;img.src=t.cover || '';img.style.visibility=t.cover?'visible':'hidden';}
+    }
+    const bg=$('.sol-immersive-bg');if(bg && bg.dataset.cover !== t.cover){bg.dataset.cover=t.cover;bg.style.backgroundImage=t.cover?'url('+JSON.stringify(t.cover)+')':'none';}
+    const demo=$('#sol-effects-demo-art');if(demo && demo.dataset.cover !== t.cover){demo.dataset.cover=t.cover;demo.style.backgroundImage=t.cover?'url('+JSON.stringify(t.cover)+')':'';}
+  }
+  function tickPlayback() {
+    // Spotify's background windows do not need a progress/lyrics DOM redraw.
+    if (document.hidden) return;
+    const paused=!isPlaying();
+    root.classList.toggle('sol-paused',paused);
+    const seekMax=duration(),ratio=seekMax?clamp(progress()/seekMax,0,1,0):0;
+    for(const selector of ['#sol-mini-seek','#sol-immersive-seek']){
+      const el=$(selector);
+      const next=String(Math.round(ratio*1000));
+      if(el && document.activeElement!==el && el.value!==next)el.value=next;
+    }
+    const playIcon=paused?'▶':'❚❚';
+    const playTitle=paused?'Play':'Pause';
+    for(const selector of ['#sol-mini-play','#sol-immersive-play']){const el=$(selector);if(el){if(el.textContent!==playIcon)el.textContent=playIcon;if(el.title!==playTitle)el.title=playTitle;if(el.getAttribute('aria-label')!==playTitle)el.setAttribute('aria-label',playTitle);}}
+    const pos=$('#sol-immersive-position');if(pos){const next=fmt(progress());if(pos.textContent!==next)pos.textContent=next;}
+    const len=$('#sol-immersive-length');if(len){const next=fmt(seekMax);if(len.textContent!==next)len.textContent=next;}
+    updateLyricUI();
+  }
+  function onTrackChanged() {
+    const t=track(), signature=trackSignature(t);
+    if(signature===currentId) { if(t.cover!==lastCover){redrawArtwork();updatePalette(t);}updateTrackDisplays();return;}
+    if(currentId && t.uri && prefs.showPopups)notify(t.title+' — '+t.artist);
+    currentId=signature;
+    fetchAbort?.abort();
+    lastLyricStatus='Looking for lyrics…';
+    redrawArtwork();updateTrackDisplays();updatePalette(t);queueLyrics();
+    if(studioTab==='lyrics' && !$('#sol-overlay')?.hidden)renderStudio('lyrics');
+  }
+  function initialize() {
+    if(initialized || !document.body) return;
+    if(!$('.Root') && !$('#main')) return;
+    initialized=true;
+    mountArtwork();mountUI();style();onTrackChanged();mountSidebar();
+    if(!eventBound && player()?.addEventListener){
+      const p=player();
+      p.addEventListener('songchange',onTrackChanged);
+      p.addEventListener('onplaypause',tickPlayback);
+      eventBound=true;
+    }
+    // Event-driven track updates, with a light fallback for Spotify route changes.
+    // 800ms lyric/progress ticks and 4s sidebar checks reduce unnecessary CPU/DOM work.
+    timer=setInterval(tickPlayback,800);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { onTrackChanged(); tickPlayback(); mountSidebar(); } });
+    setInterval(()=>{ if (document.hidden) return; mountArtwork(); mountSidebar(); onTrackChanged(); if (!$('#sol-overlay')?.hidden) renderDiagnostics(); },4000);
+  }
+  const bootstrap=setInterval(()=>{initialize();if(initialized)clearInterval(bootstrap);},250);
+  setTimeout(()=>clearInterval(bootstrap),30000);
+})();
