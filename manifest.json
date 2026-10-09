@@ -1,6 +1,6 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.8 — album-art glass, immersive player, synchronized lyrics, Studio controls and lighter playback updates.",
+  "description": "Solstice 3.1.9 — visible song play buttons, restored expanded Now Playing artwork, glass, immersive player and synchronized lyrics.",
   "preview": "preview.svg",
   "readme": "README.md",
   "usercss": "user.css",
