@@ -1,6 +1,6 @@
 {
   "name": "Solstice",
-  "description": "Immersive glass theme with artwork-reactive colors, synchronized lyrics, always-visible play controls, Solstice Studio, and an in-theme updater with settings backup.",
+  "description": "Immersive glass theme with artwork-reactive colors, synchronized lyrics, always-visible play controls, Solstice Studio and in-theme updates with settings backup. Solstice 3.1.14",
   "preview": "preview.svg",
   "readme": "README.md",
   "usercss": "user.css",
