@@ -1127,7 +1127,7 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 :root.sol-reduced-motion #sol-immersive #sol-tonearm .sol-tonearm-cartridge{transition:none!important;}
 
 
-/* Solstice 3.1.26 — complete responsive Immersive stage + cue geometry.
+/* Solstice 3.1.27 — complete responsive Immersive stage + cue geometry.
    A single last-in-cascade source of truth: no imaginary .sol-left elements.
    JS embeds these rules too, so a stale Marketplace CSS is not a blocker. */
 #sol-immersive{
