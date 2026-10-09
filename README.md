@@ -10,7 +10,7 @@
 
 ![Solstice preview](preview-v3.1.24.svg)
 
-**3.1.24 vinyl motor fix:** Ships the turntable's spinning keyframes together with the self-contained fallback CSS. The record rotates during playback, pauses when playback stops, and resumes from the current angle after manual dragging. User and system reduced-motion preferences remain respected. No lyrics or Studio data are reset.
+**3.1.24 vinyl motor fix:** Ships the turntable's spinning keyframes together with the self-contained fallback CSS. The record rotates at **33⅓ RPM** (one revolution every 1.8 seconds) during playback, pauses when playback stops, and resumes from the current angle after manual dragging. User and system reduced-motion preferences remain respected. No lyrics or Studio data are reset.
 
 **3.1.23 Marketplace reliability fix:** Vinyl/needle layout styles are now embedded in `theme.js`, so an old installed `user.css` cannot stretch the album cover across the record or hide the SVG tonearm. New installs reference the moving `@main` script URL rather than a permanently pinned commit. The 34% cover, reduced-seek dragging, Studio preferences and saved lyrics are preserved. Existing installations pinned to old versions still need to update their saved Marketplace record once.
 
