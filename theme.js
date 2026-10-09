@@ -1,9 +1,10 @@
-/* Solstice 3.1.12 — lighter lyrics/progress updates. All existing Studio, immersive, animation and lyric features preserved. */
+/* Solstice 3.1.13 — Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
 (() => {
   'use strict';
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
+  const SOLSTICE_VERSION = '3.1.13';
   const KEY = 'solstice-v3-prefs';
   const OLD_KEY = 'solstice-v2-prefs';
   const LYRICS = 'solstice-v2-lyrics'; // Retain all locally saved v2.x lyrics.
@@ -415,6 +416,121 @@
     if(!panel.hidden){updateLyricUI();if(!lyricText()&&prefs.autoLyrics)queueLyrics();}
   }
 
+
+  // Solstice Updater checks GitHub's latest published manifest. Marketplace
+  // remains responsible for installing files; we never execute remote JS.
+  const UPDATE_BACKUP_KEY = 'solstice-v3-update-backup';
+  let updateState = {checking:false, checkedAt:0, latest:null,
+    message:'Choose Check for updates to compare with the public Solstice release.'};
+  function versionCompare(a,b) {
+    const left=String(a||'').split('.').slice(0,3).map(Number);
+    const right=String(b||'').split('.').slice(0,3).map(Number);
+    for(let i=0;i<3;i++){const x=left[i]||0,y=right[i]||0;if(x!==y)return x>y?1:-1;}
+    return 0;
+  }
+  function solsticeBackup() {
+    return {format:'solstice-studio-backup',schema:1,
+      version:SOLSTICE_VERSION,createdAt:new Date().toISOString(),
+      preferences:{...prefs},lyrics:{...savedLyrics}};
+  }
+  function keepUpdateSnapshot() {
+    try {localStorage.setItem(UPDATE_BACKUP_KEY,JSON.stringify(solsticeBackup()));return true;}
+    catch(e){console.warn('[Solstice] Could not save update snapshot',e);return false;}
+  }
+  function updateUpdaterPanel() {
+    const message=$('#sol-updater-status');
+    if(message)message.textContent=updateState.message;
+    const check=$('#sol-updater-check');
+    if(check){check.disabled=updateState.checking;check.textContent=updateState.checking?'Checking…':'Check for updates';}
+    const version=$('#sol-updater-version');
+    if(version)version.textContent='Installed: '+SOLSTICE_VERSION+(updateState.latest?' • Latest: '+updateState.latest:'');
+  }
+  async function checkSolsticeUpdates() {
+    if(updateState.checking)return;
+    updateState.checking=true;
+    updateState.message='Checking the public Solstice release on GitHub…';
+    updateUpdaterPanel();
+    const controller=new AbortController();
+    const watchdog=setTimeout(()=>controller.abort(),10000);
+    try {
+      const endpoint='https://raw.githubusercontent.com/y2kbeatzz-dot/Solstice/main/manifest.json?check='+Date.now();
+      const response=await fetch(endpoint,{cache:'no-store',signal:controller.signal});
+      if(!response.ok)throw new Error('HTTP '+response.status);
+      const manifest=await response.json();
+      const match=String(manifest.description||'').match(/Solstice\s+v?(\d+\.\d+\.\d+)/i);
+      if(!match)throw new Error('Version unavailable in public manifest');
+      updateState.latest=match[1];
+      updateState.checkedAt=Date.now();
+      const difference=versionCompare(updateState.latest,SOLSTICE_VERSION);
+      updateState.message=difference>0?
+        'Update available: '+updateState.latest+'. Your Studio settings and saved lyrics stay in Spotify storage. Open Marketplace → Installed → Update to apply it.':
+        difference===0?'You are using the latest public Solstice version. Your settings and lyrics are preserved across theme updates.':
+        'Your installed Solstice version is newer than the published manifest.';
+    }catch(e){
+      updateState.message='Could not check GitHub right now. You can still open Marketplace → Installed to look for updates.';
+    }finally{
+      clearTimeout(watchdog);
+      updateState.checking=false;
+      updateUpdaterPanel();
+    }
+  }
+  function openSolsticeMarketplace() {
+    // Keep an additional on-device safety copy before handing off to Marketplace.
+    keepUpdateSnapshot();
+    const history=window.Spicetify?.Platform?.History;
+    if(history?.push){
+      try {closeStudio();history.push('/marketplace');return;}catch(e){console.warn('[Solstice] Marketplace navigation failed',e);}
+    }
+    updateState.message='Open Marketplace from Spotify’s sidebar, then Installed → Solstice → Update.';
+    updateUpdaterPanel();
+  }
+  function exportSolsticeBackup() {
+    try {
+      const json=JSON.stringify(solsticeBackup(),null,2);
+      const blob=new Blob([json],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const anchor=document.createElement('a');
+      anchor.href=url;anchor.download='Solstice-Settings-'+SOLSTICE_VERSION+'.json';
+      document.body.append(anchor);anchor.click();anchor.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1500);
+      updateState.message='Backup created. Keep the JSON file to restore your settings and lyrics later.';
+    }catch(e){
+      updateState.message='Could not export your backup. Your current settings were not changed.';
+    }
+    updateUpdaterPanel();
+  }
+  async function restoreSolsticeBackup(file) {
+    if(!file)return;
+    try{
+      if(file.size>3_000_000)throw new Error('Backup file is too large.');
+      const backup=JSON.parse(await file.text());
+      if(backup?.format!=='solstice-studio-backup'||backup.schema!==1||
+        !backup.preferences||typeof backup.preferences!=='object'||Array.isArray(backup.preferences)||
+        !backup.lyrics||typeof backup.lyrics!=='object'||Array.isArray(backup.lyrics))
+        throw new Error('Not a Solstice settings backup.');
+      if(typeof window.confirm==='function'&&!window.confirm('Restore saved Solstice settings and lyrics from this backup? This replaces current Solstice preferences and lyric edits.'))return;
+      // Only import known settings; old or unsafe keys cannot override theme internals.
+      const restored={};
+      for(const key of Object.keys(defaults)){
+        if(Object.prototype.hasOwnProperty.call(backup.preferences,key)&&
+           typeof backup.preferences[key]===typeof defaults[key])restored[key]=backup.preferences[key];
+      }
+      const lyrics={};
+      for(const [key,value] of Object.entries(backup.lyrics)){
+        if(typeof key==='string'&&typeof value==='string')lyrics[key]=value;
+      }
+      localStorage.setItem(KEY,JSON.stringify(restored));
+      localStorage.setItem(LYRICS,JSON.stringify(lyrics));
+      Object.assign(prefs,defaults,restored);
+      prefs.autoColor=true;delete prefs.preset;
+      for(const key of Object.keys(savedLyrics))delete savedLyrics[key];
+      Object.assign(savedLyrics,lyrics);
+      style();updateLyricUI();
+      updateState.message='Backup restored. Your appearance and saved lyrics are ready.';
+    }catch(e){updateState.message='Restore failed: '+(e?.message||'Unknown error')+'. Current settings were kept when validation failed.';}
+    updateUpdaterPanel();
+  }
+
   function mountUI() {
     if ($('#sol-launcher')) return;
     const launcher = make('<button id="sol-launcher" title="Open Solstice Studio (Ctrl+Alt+S)" type="button">☀ SOLSTICE</button>');
@@ -429,8 +545,8 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.12</small><h1>☀ Solstice Studio</h1></div></header>
-      <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button></nav>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.13</small><h1>☀ Solstice Studio</h1></div></header>
+      <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
     $('#sol-close').addEventListener('click',closeStudio);
@@ -455,11 +571,36 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.12 · SIDEBAR FIX</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.13 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
       $('#sol-toggle-mini').onclick=()=>{setPref('miniPlayer',!prefs.miniPlayer);renderStudio('overview');};
+
+    } else if (tab === 'updates') {
+      body.innerHTML='<div class="sol-grid"><section class="sol-card"><span class="sol-pill">SOLSTICE UPDATER</span><h2>Stay up to date</h2>'+
+        '<p id="sol-updater-version" class="sol-note"></p><p id="sol-updater-status" class="sol-note" role="status"></p>'+
+        '<p>Check for the newest Solstice on GitHub, then update through Spicetify Marketplace. Studio settings and lyric edits remain saved between versions.</p>'+
+        '<div class="sol-actions"><button id="sol-updater-check" class="sol-primary" type="button">Check for updates</button>'+
+        '<button id="sol-updater-open" type="button">Open Marketplace to update ↗</button></div>'+
+        '<p class="sol-note">Marketplace may display an older description while its index refreshes. This updater checks the public release directly.</p></section>'+
+        '<section class="sol-card"><span class="sol-pill">KEEP YOUR SETTINGS</span><h2>Backup & restore</h2>'+
+        '<p>Solstice automatically retains your Studio preferences and saved lyrics when you install a new version through Marketplace. Export a backup for extra protection.</p>'+
+        '<div class="sol-actions"><button id="sol-updater-export" type="button">Export settings + lyrics</button>'+
+        '<button id="sol-updater-import" type="button">Restore backup</button>'+
+        '<input id="sol-updater-file" type="file" accept=".json,application/json" hidden></div>'+
+        '<p class="sol-note">Only your Solstice settings and edited lyrics are included. No account information is exported.</p></section></div>';
+      $('#sol-updater-check').onclick=checkSolsticeUpdates;
+      $('#sol-updater-open').onclick=openSolsticeMarketplace;
+      $('#sol-updater-export').onclick=exportSolsticeBackup;
+      $('#sol-updater-import').onclick=()=>$('#sol-updater-file').click();
+      $('#sol-updater-file').onchange=async event=>{
+        const file=event.target.files?.[0];
+        if(file)await restoreSolsticeBackup(file);
+        event.target.value='';
+      };
+      updateUpdaterPanel();
+      if(!updateState.checkedAt&&!updateState.checking)void checkSolsticeUpdates();
     } else if (tab === 'appearance') {
       body.innerHTML = `<div class="sol-grid"><section class="sol-card"><h2>Artwork-matched glass</h2><p>All colors follow the current album art automatically. Adjust the sliders while watching the live sample below.</p><div id="sol-effects-demo" aria-label="Glass effects preview"><div id="sol-effects-demo-art"></div><div id="sol-effects-demo-glass"><b>Solstice glass</b><small>Live blur · opacity · glow</small></div></div>${labeledRange('Glass opacity (%)','glassOpacity',0,80)}${labeledRange('Glass blur (px)','blur',0,45)}${labeledRange('Corner radius (px)','radius',8,36)}
        ${labeledRange('Glow strength (%)','glowStrength',0,100)}</section><section class="sol-card"><h2>Living backgrounds</h2>
@@ -491,7 +632,7 @@
       updateLyricUI();
       if (prefs.autoLyrics && !lyricCache.has(trackSignature(t)) && !savedLyrics[trackKey()]) queueLyrics();
     } else if (tab === 'status') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card"><h2>Effect diagnostics</h2><p>Spicetify Player: <strong id="sol-status-player"></strong></p><p>Artwork: <strong id="sol-status-art"></strong></p><p>Cover colors: <strong id="sol-status-color"></strong></p><p>LRCLIB: <strong id="sol-status-lyrics"></strong></p><p>Current route: <strong id="sol-status-route"></strong></p><div class="sol-actions"><button id="sol-test-effects">Recheck & refresh effects</button></div></section><section class="sol-card"><h2>Recovery</h2><p>Reset appearance without deleting saved lyrics, or restore the previous installed theme using UNINSTALL.cmd.</p><button id="sol-reset-prefs">Reset appearance preferences</button><p class="sol-note">If Spotify changes its DOM after an update, rerun INSTALL.cmd or consult the README.</p></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card"><h2>Effect diagnostics</h2><p>Spicetify Player: <strong id="sol-status-player"></strong></p><p>Artwork: <strong id="sol-status-art"></strong></p><p>Cover colors: <strong id="sol-status-color"></strong></p><p>LRCLIB: <strong id="sol-status-lyrics"></strong></p><p>Current route: <strong id="sol-status-route"></strong></p><div class="sol-actions"><button id="sol-test-effects">Recheck & refresh effects</button></div></section><section class="sol-card"><h2>Recovery</h2><p>Reset appearance without deleting saved lyrics, or use Updater to back up your preferences.</p><button id="sol-reset-prefs">Reset appearance preferences</button><p class="sol-note">Use the Updater tab to check for new releases and save a settings backup before updating.</p></section></div>`;
       $('#sol-test-effects').onclick=()=>{lastCover='';redrawArtwork();updatePalette(track());renderDiagnostics();};
       $('#sol-reset-prefs').onclick=()=>{Object.assign(prefs,defaults);style();lastCover='';redrawArtwork();updatePalette(track());renderStudio('appearance');};
       renderDiagnostics();
