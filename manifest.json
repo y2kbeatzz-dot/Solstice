@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.12 — native explicit E badge restoration, visible play buttons, dynamic artwork, synchronized lyrics, Studio and Immersive Mode.",
+  "description": "Solstice 3.1.13 — built-in Studio Updater, settings and lyrics backup/restore, dynamic artwork, explicit badges, synced lyrics and Immersive Mode.",
   "preview": "preview.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@83e350155b05a74cb931157d6b0f57eac3588d2c/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@21fd2032208a89822ebd381b31cb472e3982dd97/theme.js"
   ],
   "authors": [
     {
