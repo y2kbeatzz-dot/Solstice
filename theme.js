@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.43';
+  const SOLSTICE_VERSION = '3.1.44';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -17,7 +17,7 @@
     artMotion: true, artMode: 'drift', vinyl: true, visualizer: true,
     karaoke: true, miniPlayer: false, autoLyrics: true, showPopups: true,
     dynamicLyrics: true, lyricFont: 'system', lyricMotion: 'flow', immersiveLyricSize: 28,
-    wordSync: false, karaokeEngine: true, smoothWordSync: true, karaokeLite: false,
+    wordSync: false, karaokeEngine: true, smoothWordSync: true, karaokeLite: false, lyricSyncOffset: 0,
     ambientTint: 32, radius: 20, reducedMotion: false
   };
   const rgbHex = hex => [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)).join(',');
@@ -791,7 +791,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.43</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.44</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -831,7 +831,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.43 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.44 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -903,6 +903,8 @@
         ${labeledSwitch('Solstice word-sync engine','karaokeEngine','On: use Solstice’s dedicated karaoke clock. Off: traditional lyric refresh.')}
         ${labeledSwitch('Smooth word timing','smoothWordSync','Interpolate Spotify playback position between samples for fluid highlights.')}
         ${labeledSwitch('Low-power karaoke','karaokeLite','Reduce karaoke updates to about 15 FPS for slower PCs.')}
+        ${labeledRange('Lyric timing adjustment (ms)','lyricSyncOffset',-1000,1000)}
+        <p class="sol-note">Timing: negative values move lyrics earlier; positive values move lyrics later. Start at 0. Adjust in 100 ms steps if a song is consistently ahead or behind.</p>
         ${labeledRange('Immersive lyric size (px)','immersiveLyricSize',18,42)}
         <p class="sol-note">Font selections use installed system fonts, with fallbacks. LRCLIB timestamps synchronize lines, not individual words. Reduced Motion disables animations.</p>
       </section></div>`;
@@ -1368,15 +1370,15 @@
         const actual=progress();
         const predicted=sampledPosition+(lastClockPlaying ? now-sampledAt : 0);
         const difference=actual-predicted;
-        // Seek, track switch, or pause/play: snap immediately. Otherwise
-        // gently reconcile Spotify's coarse clock to avoid 300ms jitter.
-        if(!sampledAt || Math.abs(difference)>600 || nowTrack!==lastClockTrack ||
+        // Follow Spotify's clock promptly. Large differences are seeks or
+        // discontinuities; smaller ones correct without accumulating a delay.
+        if(!sampledAt || Math.abs(difference)>200 || nowTrack!==lastClockTrack ||
            playing!==lastClockPlaying || !prefs.smoothWordSync)sampledPosition=actual;
-        else sampledPosition=predicted+difference*0.18;
+        else sampledPosition=predicted+difference*0.65;
         sampledAt=now;
         lastClockTrack=nowTrack;lastClockPlaying=playing;
       }
-      const position=Math.max(0,sampledPosition+(playing && prefs.smoothWordSync?now-sampledAt:0));
+      const position=Math.max(0,sampledPosition+(playing && prefs.smoothWordSync?now-sampledAt:0)-Number(prefs.lyricSyncOffset||0));
       drawLyricBox(pane,variant,{data:karaokeData,lines:karaokeLines,
         fingerprint:karaokeFingerprint,position});
     }
