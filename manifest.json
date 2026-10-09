@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.44 — improved dynamic lyric sync with faster playback clock correction and adjustable saved lyric timing offset in Studio.",
+  "description": "Solstice 3.1.45 — fixes dynamic lyric progression stutter caused by competing playback clocks, corrects sync slider direction, and reduces gradient repaints.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@4d3b9d57611dfca672249e5f1694c0e38deb882c/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@f5a313545f5c9ffa7e9e04a2158b6776b242c81c/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.44"
+  "version": "3.1.45"
 }
