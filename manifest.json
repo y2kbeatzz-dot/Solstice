@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Immersive glass theme with a hands-on vinyl turntable: record dragging to rewind or fast-forward, needle controls, synced lyrics, Studio and settings-preserving updates. Solstice 3.1.20",
-  "preview": "preview-v3.1.20.svg",
+  "description": "Solstice glass Spicetify theme with a detailed animated vinyl tonearm and stylus, smaller centered album-art record label, live drag seeking, synced lyrics and Studio. Solstice 3.1.21",
+  "preview": "preview-v3.1.21.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@dcb12c8fd77c1e68a288f3dc4f7473775f6d927a/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@46e95cd9e546b3f6ff0ab4f86ddd6edba67050c5/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.20"
+  "version": "3.1.21"
 }
