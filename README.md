@@ -2,13 +2,15 @@
 
 ### Your music. In full color.
 
-**Solstice 3.1.26** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
+**Solstice 3.1.27** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
 
-**🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.26.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
+**🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.27.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
 
 **⭐ [Please star this repository to help support Solstice!](https://github.com/y2kbeatzz-dot/Solstice)**
 
-![Solstice preview](preview-v3.1.26.svg)
+![Solstice preview](preview-v3.1.27.svg)
+
+**3.1.27 public Marketplace update:** New installations now use the exact same working technique as the verified 3.1.26 repair: the Marketplace manifest specifies **immutable, matching-version URLs for both `theme.js` and `user.css`**. Just search Solstice in Marketplace and install (or use the Marketplace update flow); **no Console script or database edits for new installations**. The responsive needle, record, controls, Studio preferences and saved lyrics stay intact. Existing Marketplace installations can retain cached installation records and may require a normal Marketplace refresh/reinstall before the new pinned references are used.
 
 **3.1.26 responsive redesign:** Immersive Mode now fits desktop and compact Spotify windows without overflowing. The needle moves onto the right outer groove when music plays and tracks inward toward the center throughout the song; it parks off the record when paused. Tightened deck, header, transport and lyrics layout; small screens use a dedicated scrollable center panel. The black LP, centered artwork, 33⅓ RPM spin, drag seeking, saved lyrics and Solstice Studio are preserved. A versioned inline stylesheet accompanies the script so Marketplace CSS caching cannot restore the broken layout.
 
@@ -24,6 +26,8 @@
 
 **3.1.21:** A detailed metallic SVG tonearm with a weighted pivot, cartridge, animated cueing/needle drop, and a smaller center album label (25% of the record width). The turntable is more compact and the record still scrubs backward and forward. Reduced-motion preferences remain supported.
 
+**Install:** In Spotify, open **Marketplace → Themes → Solstice → Install**. Existing installations: **Marketplace → Installed → Solstice → Update** if offered; otherwise refresh Marketplace or reinstall Solstice. Solstice's separately stored Studio settings and lyric edits are not cleared by a normal theme update.
+
 ## Features
 
 - **Artwork-powered colors** — accents and lighting respond to the album cover.
@@ -33,7 +37,7 @@
 - **Solstice Updater** — an in-theme Studio tab that checks the latest public release, opens Marketplace, and backs up/restores Studio settings and edited lyrics.
 - **Lightweight playback updates** — shared lyric timing and cached rendering.
 
-## Version 3.1.26
+## Version 3.1.27
 
 Adds an **interactive vinyl deck** to Immersive Mode: drag the record clockwise to advance or counterclockwise to rewind, lift/drop the tonearm to pause/play, and use ±10-second buttons. Supports keyboard seeking and preserves Studio preferences, saved lyrics, and all previous visual features. The Studio Updater, saved settings and lyrics, immersive effects, and all previous features remain.
 
