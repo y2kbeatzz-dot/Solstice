@@ -577,3 +577,23 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
   content:none!important;
   display:none!important;
 }
+
+/* Solstice 3.1.13: the updater is part of Studio, not a separate overlay. */
+#sol-body #sol-updater-version{
+  font-weight:800;
+  color:var(--sol-accent);
+  overflow-wrap:anywhere;
+}
+#sol-body #sol-updater-status{
+  box-sizing:border-box;
+  min-height:52px;
+  padding:11px 14px;
+  border:1px solid rgba(var(--sol-rgb),.38);
+  border-left:3px solid var(--sol-accent);
+  border-radius:12px;
+  background:rgba(var(--sol-panel-rgb),.45);
+  color:#e4faf5;
+  overflow-wrap:anywhere;
+}
+#sol-body #sol-updater-check:disabled{opacity:.65;cursor:wait;}
+#sol-body #sol-updater-open{border-color:rgba(var(--sol-rgb),.52);}
