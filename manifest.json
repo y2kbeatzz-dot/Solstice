@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.36 — smoother word-by-word karaoke with corrected NetEase timestamps and more responsive highlighting. Includes Lyrics Studio, Flow/Glow/Calm effects and immersive vinyl.",
+  "description": "Solstice 3.1.37 — fixes updater version checks with GitHub API fallback and clearer errors; includes smoother word-sync karaoke and Lyrics Studio.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
-  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@15d54ceb562a835acfd370f2c6c35a0d1ecd789d/user.css",
+  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@72d1f643f6e44de1bcf029e78f1332167633681c/user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@15d54ceb562a835acfd370f2c6c35a0d1ecd789d/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@72d1f643f6e44de1bcf029e78f1332167633681c/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.36"
+  "version": "3.1.37"
 }
