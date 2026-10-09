@@ -2,13 +2,15 @@
 
 ### Your music. In full color.
 
-**Solstice 3.1.36** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
+**Solstice 3.1.37** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
 
 **🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.32.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
 
 **⭐ [Please star this repository to help support Solstice!](https://github.com/y2kbeatzz-dot/Solstice)**
 
 ![Solstice preview](preview-v3.1.32.svg)
+
+**3.1.37 updater fix:** The in-Studio version checker now tries GitHub API first and falls back to raw/CDN manifest URLs. It reports network errors instead of falsely claiming a successful check. Marketplace still installs the update separately.
 
 **3.1.36 word-sync fix:** Word-timed highlighting updates at roughly 75 ms while playing, and NetEase word offsets now include their line start timestamp. Slower playback and metadata refreshes stay separate to limit unnecessary work.
 
@@ -18,7 +20,7 @@
 
 **Earlier font and performance update:** Font selection now synchronizes directly with all mounted lyric panes, including Studio's preview. Hidden panes no longer trigger unnecessary karaoke rendering, and the word-sync loop runs less frequently.  Selected lyric fonts now apply consistently across Studio, immersive, sidebar and floating lyric panes. Word-timed karaoke refreshes less frequently to reduce rendering load; artwork compositing is lighter. Windows font availability still determines whether the requested typeface or its fallback renders.
 
-**3.1.36 true word-by-word lyrics:** Solstice Studio → **Lyrics** now has eight selectable font stacks, an Immersive lyric-size control, and Flow / Glow / Calm lyric motion. The editor recognizes **Enhanced LRC** (`[00:12.000]<00:12.000>Hello <00:12.500>world`) and highlights real individual timestamps, not guesses. An **optional NetEase word-timing lookup** reads YRC/klyric for confidently title- and duration-matched songs (enable in Studio → Lyrics). NetEase uses an unofficial third-party endpoint that can fail due to region, provider changes or networking restrictions. Without confirmed word timestamps, Solstice keeps normal LRCLIB line-synced lyrics, with an optional progressive line fill. NetEase lookup sends current song title and artist to that service only if enabled; it is disabled by default. Original lyric edits and settings remain saved, and Reduce Motion disables text animations.
+**3.1.37 true word-by-word lyrics:** Solstice Studio → **Lyrics** now has eight selectable font stacks, an Immersive lyric-size control, and Flow / Glow / Calm lyric motion. The editor recognizes **Enhanced LRC** (`[00:12.000]<00:12.000>Hello <00:12.500>world`) and highlights real individual timestamps, not guesses. An **optional NetEase word-timing lookup** reads YRC/klyric for confidently title- and duration-matched songs (enable in Studio → Lyrics). NetEase uses an unofficial third-party endpoint that can fail due to region, provider changes or networking restrictions. Without confirmed word timestamps, Solstice keeps normal LRCLIB line-synced lyrics, with an optional progressive line fill. NetEase lookup sends current song title and artist to that service only if enabled; it is disabled by default. Original lyric edits and settings remain saved, and Reduce Motion disables text animations.
 
 **3.1.27 public Marketplace update:** New installations now use the exact same working technique as the verified 3.1.26 repair: the Marketplace manifest specifies **immutable, matching-version URLs for both `theme.js` and `user.css`**. Just search Solstice in Marketplace and install (or use the Marketplace update flow); **no Console script or database edits for new installations**. The responsive needle, record, controls, Studio preferences and saved lyrics stay intact. Existing Marketplace installations can retain cached installation records and may require a normal Marketplace refresh/reinstall before the new pinned references are used.
 
@@ -47,7 +49,7 @@
 - **Solstice Updater** — an in-theme Studio tab that checks the latest public release, opens Marketplace, and backs up/restores Studio settings and edited lyrics.
 - **Lightweight playback updates** — shared lyric timing and cached rendering.
 
-## Version 3.1.36
+## Version 3.1.37
 
 Includes font consistency and rendering performance fixes plus the **interactive vinyl deck** to Immersive Mode: drag the record clockwise to advance or counterclockwise to rewind, lift/drop the tonearm to pause/play, and use ±10-second buttons. Supports keyboard seeking and preserves Studio preferences, saved lyrics, and all previous visual features. The Studio Updater, saved settings and lyrics, immersive effects, and all previous features remain.
 
