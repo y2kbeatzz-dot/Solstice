@@ -1,10 +1,10 @@
-/* Solstice 3.1.21 — Confirmed explicit badge repair and Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
+/* Solstice 3.1.22 — Confirmed explicit badge repair and Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
 (() => {
   'use strict';
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.21';
+  const SOLSTICE_VERSION = '3.1.22';
   const KEY = 'solstice-v3-prefs';
   const OLD_KEY = 'solstice-v2-prefs';
   const LYRICS = 'solstice-v2-lyrics'; // Retain all locally saved v2.x lyrics.
@@ -588,7 +588,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.21</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.22</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -614,7 +614,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.21 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.22 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -753,7 +753,7 @@
       if(e.button!==0||vinylScrub||!duration())return;
       const rect=disc.getBoundingClientRect();
       if(!rect.width||!rect.height)return;
-      const state={pointerId:e.pointerId,previous:vinylPointerAngle(e,rect),
+      const state={pointerId:e.pointerId,bounds:rect,previous:vinylPointerAngle(e,rect),
         rotation:vinylRotation(disc),targetMs:progress(),wasPlaying:isPlaying(),
         trackUri:track().uri,moved:false,lastSeek:0};
       vinylScrub=state;
@@ -770,7 +770,7 @@
     disc.addEventListener('pointermove',e=>{
       const state=vinylScrub;
       if(!state||e.pointerId!==state.pointerId)return;
-      const angle=vinylPointerAngle(e,disc.getBoundingClientRect());
+      const angle=vinylPointerAngle(e,state.bounds);
       const delta=vinylAngleDelta(angle-state.previous);
       state.previous=angle;
       if(Math.abs(delta)<.002)return;
@@ -778,13 +778,17 @@
       state.rotation+=delta*180/Math.PI;
       // One 360° turn moves 12s: usable turntable-style scrub sensitivity.
       state.targetMs=clamp(state.targetMs+delta/(2*Math.PI)*12000,0,duration(),0);
-      disc.style.setProperty('--sol-scratch-angle',state.rotation+'deg');
+      // Inline transform is already the source of truth, so skip changing
+      // the CSS custom property on each pointer event (less style work).
       // Turn both the record grooves and album center label with the cursor.
       disc.style.setProperty('transform','rotate('+state.rotation+'deg)','important');
       const hint=$('#sol-vinyl-hint');
-      if(hint)hint.textContent='CUE '+fmt(state.targetMs)+' / '+fmt(duration());
+      const cue='CUE '+fmt(state.targetMs)+' / '+fmt(duration());
+      if(hint&&hint.textContent!==cue)hint.textContent=cue;
       const now=performance.now();
-      if(now-state.lastSeek>170){seekVinyl(state.targetMs);state.lastSeek=now;}
+      // Spotify seeks can be expensive. Keep the record moving smoothly while
+      // batching player seeks to at most ~3 per second; commit on pointerup.
+      if(now-state.lastSeek>320){seekVinyl(state.targetMs);state.lastSeek=now;}
       e.preventDefault();
     });
     disc.addEventListener('pointerup',finishVinylScrub);
@@ -962,7 +966,9 @@
     for(const selector of ['#sol-mini-play','#sol-immersive-play']){const el=$(selector);if(el){if(el.textContent!==playIcon)el.textContent=playIcon;if(el.title!==playTitle)el.title=playTitle;if(el.getAttribute('aria-label')!==playTitle)el.setAttribute('aria-label',playTitle);}}
     const pos=$('#sol-immersive-position');if(pos){const next=fmt(posMs);if(pos.textContent!==next)pos.textContent=next;}
     const len=$('#sol-immersive-length');if(len){const next=fmt(seekMax);if(len.textContent!==next)len.textContent=next;}
-    updateLyricUI(posMs);
+    // Live SVG tonearm/record scrubbing remains responsive without doing
+    // expensive lyric layout recalculations on a dragging record.
+    if(!vinylScrub)updateLyricUI(posMs);
   }
   function onTrackChanged() {
     const t=track(), signature=trackSignature(t);
