@@ -4,11 +4,11 @@
 
 **Solstice 3.1.15** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
 
-**🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
+**🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.15.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
 
 **⭐ [Please star this repository to help support Solstice!](https://github.com/y2kbeatzz-dot/Solstice)**
 
-![Solstice preview](preview.svg)
+![Solstice preview](preview-v3.1.15.svg)
 
 ## Features
 
