@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Dynamic album-art glass theme with immersive player, synchronized lyrics and performance-focused updates.",
+  "description": "Solstice 3.1.8 — album-art glass, immersive player, synchronized lyrics, Studio controls and lighter playback updates.",
   "preview": "preview.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@main/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@72cacbc4a57b0852275e60523a72f6dff13164ba/theme.js"
   ],
   "authors": [
     {
@@ -19,5 +19,6 @@
     "glass",
     "dynamic",
     "lyrics"
-  ]
+  ],
+  "branch": "main"
 }
