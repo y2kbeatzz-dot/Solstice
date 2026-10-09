@@ -453,10 +453,20 @@
     const controller=new AbortController();
     const watchdog=setTimeout(()=>controller.abort(),10000);
     try {
-      const endpoint='https://raw.githubusercontent.com/y2kbeatzz-dot/Solstice/main/manifest.json?check='+Date.now();
-      const response=await fetch(endpoint,{cache:'no-store',signal:controller.signal});
-      if(!response.ok)throw new Error('HTTP '+response.status);
-      const manifest=await response.json();
+      const endpoints=[
+        'https://raw.githubusercontent.com/y2kbeatzz-dot/Solstice/main/manifest.json?check='+Date.now(),
+        'https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@main/manifest.json?check='+Date.now()
+      ];
+      let manifest=null;
+      for(const endpoint of endpoints){
+        try{
+          const response=await fetch(endpoint,{cache:'no-store',signal:controller.signal});
+          if(!response.ok)throw new Error('HTTP '+response.status);
+          manifest=await response.json();
+          break;
+        }catch(e){if(controller.signal.aborted)throw e;}
+      }
+      if(!manifest)throw new Error('The release servers could not be reached.');
       const match=String(manifest.description||'').match(/Solstice\s+v?(\d+\.\d+\.\d+)/i);
       if(!match)throw new Error('Version unavailable in public manifest');
       updateState.latest=match[1];
@@ -517,10 +527,25 @@
       }
       const lyrics={};
       for(const [key,value] of Object.entries(backup.lyrics)){
-        if(typeof key==='string'&&typeof value==='string')lyrics[key]=value;
+        if(typeof key==='string'&&key!=='__proto__'&&key!=='constructor'&&
+           key!=='prototype'&&key.length<=512&&typeof value==='string')lyrics[key]=value;
       }
-      localStorage.setItem(KEY,JSON.stringify(restored));
-      localStorage.setItem(LYRICS,JSON.stringify(lyrics));
+      // Write both storage keys together or restore previous values if storage
+      // throws (quota/privacy mode), so no lyric edits are lost on failure.
+      const previousPreferences=localStorage.getItem(KEY);
+      const previousLyrics=localStorage.getItem(LYRICS);
+      try{
+        localStorage.setItem(KEY,JSON.stringify(restored));
+        localStorage.setItem(LYRICS,JSON.stringify(lyrics));
+      }catch(writeError){
+        try{
+          if(previousPreferences===null)localStorage.removeItem(KEY);
+          else localStorage.setItem(KEY,previousPreferences);
+          if(previousLyrics===null)localStorage.removeItem(LYRICS);
+          else localStorage.setItem(LYRICS,previousLyrics);
+        }catch(rollbackError){console.warn('[Solstice] Storage rollback failed',rollbackError);}
+        throw writeError;
+      }
       Object.assign(prefs,defaults,restored);
       prefs.autoColor=true;delete prefs.preset;
       for(const key of Object.keys(savedLyrics))delete savedLyrics[key];
