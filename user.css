@@ -1396,3 +1396,96 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 :root.sol-reduced-motion #sol-immersive #sol-tonearm .sol-tonearm-cartridge{
   transition:none!important;
 }
+
+
+/* Solstice 3.1.28 — expressive synchronized lyrics and font studio.
+   Scoped to Solstice lyric panes, not native Spotify lyrics or menus. */
+#sol-immersive .sol-lyrics-scroll,
+#sol-sidebar-lyrics .sol-lyrics-scroll,
+#sol-live-panel .sol-lyrics-scroll,
+#sol-studio-lyrics.sol-lyrics-scroll,
+#sol-lyric-font-preview {
+  font-family:var(--sol-lyrics-font,'Segoe UI Variable','Segoe UI',sans-serif)!important;
+}
+#sol-immersive #sol-immersive-lines .sol-line{
+  font-family:inherit!important;
+  font-size:clamp(16px,var(--sol-immersive-lyric-size,28px),6vw)!important;
+  line-height:1.27!important;
+  letter-spacing:-.012em!important;
+  margin:13px 0!important;
+  opacity:.40;
+  transition:opacity 310ms ease,transform 360ms cubic-bezier(.16,.9,.25,1),
+    color 310ms ease!important;
+  transform:translateX(0) scale(.98);
+  transform-origin:left center!important;
+}
+#sol-immersive #sol-immersive-lines .sol-line.sol-active{
+  opacity:1!important;
+  transform:translateX(7px) scale(1)!important;
+}
+#sol-live-panel #sol-live-lines .sol-line,
+#sol-sidebar-lyrics #sol-side-lines .sol-line,
+#sol-studio-lyrics .sol-line{
+  font-family:inherit!important;
+  letter-spacing:-.005em;
+}
+#sol-immersive .sol-lyrics-scroll .sol-line-text,
+#sol-live-panel .sol-lyrics-scroll .sol-line-text,
+#sol-sidebar-lyrics .sol-lyrics-scroll .sol-line-text,
+#sol-studio-lyrics .sol-line-text{
+  display:inline;
+  white-space:pre-wrap;
+}
+@keyframes sol-lyric-arrive {
+  from {opacity:.6;filter:blur(1.3px);transform:translateY(7px) scale(.975)}
+  to {opacity:1;filter:blur(0);transform:translateY(0) scale(1)}
+}
+@keyframes sol-lyric-heartbeat {
+  0%,100% {text-shadow:0 0 8px rgba(var(--sol-rgb),.23)}
+  50% {text-shadow:0 0 22px rgba(var(--sol-rgb),.66)}
+}
+:root.sol-dynamic-lyrics:not(.sol-karaoke-off) .sol-lyrics-scroll .sol-line.sol-active .sol-line-text{
+  background-image:linear-gradient(90deg,
+    var(--sol-accent,#63e6ce) 0%,
+    var(--sol-accent,#63e6ce) var(--sol-line-progress,0%),
+    #c8d9df var(--sol-line-progress,0%),
+    #c8d9df 100%)!important;
+  background-clip:text!important;-webkit-background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+  text-shadow:none!important;
+}
+:root.sol-dynamic-lyrics[data-sol-lyrics-motion="flow"] .sol-lyrics-scroll .sol-line.sol-active .sol-line-text{
+  animation:sol-lyric-arrive 420ms cubic-bezier(.2,.8,.2,1) both;
+}
+:root.sol-dynamic-lyrics[data-sol-lyrics-motion="glow"] .sol-lyrics-scroll .sol-line.sol-active{
+  animation:sol-lyric-heartbeat 2.6s ease-in-out infinite;
+  animation-play-state:running;
+}
+:root.sol-paused.sol-dynamic-lyrics[data-sol-lyrics-motion="glow"] .sol-lyrics-scroll .sol-line.sol-active{
+  animation-play-state:paused!important;
+}
+:root.sol-dynamic-lyrics[data-sol-lyrics-motion="calm"] .sol-lyrics-scroll .sol-line,
+:root:not(.sol-dynamic-lyrics) .sol-lyrics-scroll .sol-line{
+  animation:none!important;
+  transition-duration:120ms!important;
+}
+:root.sol-karaoke-off .sol-lyrics-scroll .sol-line.sol-active .sol-line-text{
+  background:none!important;-webkit-text-fill-color:currentColor!important;
+}
+#sol-lyric-font-preview{
+  font-size:clamp(21px,2.5vw,28px);font-weight:750;
+  color:var(--sol-accent);padding:16px 18px;margin:12px 0 18px;
+  border-radius:16px;background:linear-gradient(110deg,rgba(var(--sol-rgb),.13),#091724bb);
+  border:1px solid rgba(var(--sol-rgb),.3);
+  line-height:1.35;
+}
+@media(prefers-reduced-motion:reduce){
+  :root .sol-lyrics-scroll .sol-line,
+  :root .sol-lyrics-scroll .sol-line-text{
+    animation:none!important;transition:none!important;filter:none!important;
+  }
+}
+:root.sol-reduced-motion .sol-lyrics-scroll .sol-line,
+:root.sol-reduced-motion .sol-lyrics-scroll .sol-line-text{
+  animation:none!important;transition:none!important;filter:none!important;
+}
