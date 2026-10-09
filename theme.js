@@ -383,24 +383,21 @@
           const spans=current.querySelectorAll('.sol-word');
           let lo=0,hi=tokens.length-1,wordIndex=-1;
           while(lo<=hi){const mid=(lo+hi)>>>1;if(position>=tokens[mid].t){wordIndex=mid;lo=mid+1;}else hi=mid-1;}
-          const previous=Number(box.dataset.wordIndex ?? -1);
           if(box.dataset.wordLine!==String(index)){
             box.dataset.wordLine=String(index);
             box.dataset.wordIndex='-1';
             for(let j=0;j<spans.length;j++){
-              spans[j].style.setProperty('--sol-word-progress','0%');
-              spans[j].dataset.fill='0';
+              const done=j<wordIndex?100:0;
+              spans[j].style.setProperty('--sol-word-progress',done+'%');
+              spans[j].dataset.fill=String(done);
             }
           }
           const old=Number(box.dataset.wordIndex ?? -1);
           if(old!==wordIndex){
-            // Seek backwards resets words ahead of the playback position.
-            const from=Math.min(old,wordIndex)+1, to=Math.max(old,wordIndex);
-            for(let j=Math.max(0,from);j<=to;j++){
-              const done=j<wordIndex?100:0;
-              if(spans[j]){spans[j].dataset.fill=String(done);spans[j].style.setProperty('--sol-word-progress',done+'%');}
+            if(wordIndex>old) for(let j=Math.max(0,old);j<wordIndex;j++){
+              if(spans[j]){spans[j].dataset.fill='100';spans[j].style.setProperty('--sol-word-progress','100%');}
             }
-            if(old>wordIndex) for(let j=Math.max(0,wordIndex+1);j<spans.length;j++){
+            else for(let j=Math.max(0,wordIndex+1);j<spans.length;j++){
               if(spans[j]?.dataset.fill!=='0'){spans[j].dataset.fill='0';spans[j].style.setProperty('--sol-word-progress','0%');}
             }
             box.dataset.wordIndex=String(wordIndex);
