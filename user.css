@@ -877,7 +877,7 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 :root.sol-reduced-motion #sol-immersive .sol-deck #sol-tonearm{transition:none!important;}
 
 
-/* Solstice 3.1.22: real articulated needle with a fixed bearing and
+/* Solstice 3.1.23: canonical vinyl styling; essential rules also ship within theme.js for Marketplace recovery. Real articulated needle with a fixed bearing and
    a moving S-curve tonearm. Earlier CSS-only arm parts are superseded.
    The record is smaller, and the album cover is a true center label. */
 #sol-immersive .sol-deck{
