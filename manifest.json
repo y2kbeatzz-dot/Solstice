@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Immersive glass theme with artwork-reactive colors, synchronized lyrics, visible play controls, Solstice Studio, and settings-preserving updates. Solstice 3.1.17",
-  "preview": "preview-v3.1.17.svg",
+  "description": "Immersive glass theme with artwork-reactive colors, synchronized lyrics, visible play buttons, Solstice Studio and settings-preserving updates. Solstice 3.1.18",
+  "preview": "preview-v3.1.18.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@a18b328175a2b9e41554adba77f3959f908d839c/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@8724d5cb6502c571130e04e084b0bc6ae86765e2/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.17"
+  "version": "3.1.18"
 }
