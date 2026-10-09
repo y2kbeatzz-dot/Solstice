@@ -607,3 +607,58 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 }
 #sol-body #sol-updater-check:disabled{opacity:.65;cursor:wait;}
 #sol-body #sol-updater-open{border-color:rgba(var(--sol-rgb),.52);}
+
+
+/* Solstice 3.1.16 — current Spotify explicit tag fix.
+   Verified markup: <span class="x-explicit-label" aria-label="Explicit" title="Explicit">.
+   Earlier versions targeted legacy .main-tag-container and therefore missed
+   Spotify's present badge. Keep the native accessible label; render E visibly. */
+span.x-explicit-label[aria-label="Explicit"],
+span.x-explicit-label[title="Explicit"] {
+  box-sizing:border-box!important;
+  position:relative!important;
+  display:inline-flex!important;
+  flex:0 0 18px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:18px!important;
+  min-width:18px!important;
+  height:18px!important;
+  min-height:18px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:2px!important;
+  background:#aebbc0!important;
+  background-image:none!important;
+  color:#101d25!important;
+  font-size:0!important;
+  line-height:1!important;
+  vertical-align:middle!important;
+  overflow:hidden!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+span.x-explicit-label[aria-label="Explicit"]::after,
+span.x-explicit-label[title="Explicit"]::after {
+  content:"E"!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:3!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:100%!important;
+  height:100%!important;
+  border-radius:inherit!important;
+  background:#aebbc0!important;
+  color:#101d25!important;
+  -webkit-text-fill-color:#101d25!important;
+  font:900 11px/1 Arial,Helvetica,sans-serif!important;
+  text-shadow:none!important;
+  text-indent:0!important;
+  letter-spacing:0!important;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:none!important;
+}
