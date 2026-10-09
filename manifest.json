@@ -6,7 +6,7 @@
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@1eaf86138dbd5a4f8bda43f805c368507f77ae99/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@main/theme.js"
   ],
   "authors": [
     {
