@@ -2,7 +2,7 @@
 
 ### Your music. In full color.
 
-**Solstice 3.1.44** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
+**Solstice 3.1.45** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
 
 **🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.32.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
 
@@ -10,7 +10,7 @@
 
 ![Solstice preview](preview-v3.1.32.svg)
 
-**3.1.44 frame pacing:** Karaoke now updates on animation frames capped at about 30 FPS, with lyric source checks throttled to four per second. The renderer continues updating only the active word and foreground lyric pane. This is a targeted performance change, not yet profiled inside Spotify.
+**3.1.45 frame pacing:** Karaoke now updates on animation frames capped at about 30 FPS, with lyric source checks throttled to four per second. The renderer continues updating only the active word and foreground lyric pane. This is a targeted performance change, not yet profiled inside Spotify.
 
 **3.1.38 karaoke performance:** Update only the currently sung word on fast ticks, finalize finished words once, and render only the foremost visible lyrics pane. Other panes update during standard refreshes. This avoids repeatedly walking every word across all lyric windows.
 
@@ -24,7 +24,7 @@
 
 **Earlier font and performance update:** Font selection now synchronizes directly with all mounted lyric panes, including Studio's preview. Hidden panes no longer trigger unnecessary karaoke rendering, and the word-sync loop runs less frequently.  Selected lyric fonts now apply consistently across Studio, immersive, sidebar and floating lyric panes. Word-timed karaoke refreshes less frequently to reduce rendering load; artwork compositing is lighter. Windows font availability still determines whether the requested typeface or its fallback renders.
 
-**3.1.44 true word-by-word lyrics:** Solstice Studio → **Lyrics** now has eight selectable font stacks, an Immersive lyric-size control, and Flow / Glow / Calm lyric motion. The editor recognizes **Enhanced LRC** (`[00:12.000]<00:12.000>Hello <00:12.500>world`) and highlights real individual timestamps, not guesses. An **optional NetEase word-timing lookup** reads YRC/klyric for confidently title- and duration-matched songs (enable in Studio → Lyrics). NetEase uses an unofficial third-party endpoint that can fail due to region, provider changes or networking restrictions. Without confirmed word timestamps, Solstice keeps normal LRCLIB line-synced lyrics, with an optional progressive line fill. NetEase lookup sends current song title and artist to that service only if enabled; it is disabled by default. Original lyric edits and settings remain saved, and Reduce Motion disables text animations.
+**3.1.45 true word-by-word lyrics:** Solstice Studio → **Lyrics** now has eight selectable font stacks, an Immersive lyric-size control, and Flow / Glow / Calm lyric motion. The editor recognizes **Enhanced LRC** (`[00:12.000]<00:12.000>Hello <00:12.500>world`) and highlights real individual timestamps, not guesses. An **optional NetEase word-timing lookup** reads YRC/klyric for confidently title- and duration-matched songs (enable in Studio → Lyrics). NetEase uses an unofficial third-party endpoint that can fail due to region, provider changes or networking restrictions. Without confirmed word timestamps, Solstice keeps normal LRCLIB line-synced lyrics, with an optional progressive line fill. NetEase lookup sends current song title and artist to that service only if enabled; it is disabled by default. Original lyric edits and settings remain saved, and Reduce Motion disables text animations.
 
 **3.1.27 public Marketplace update:** New installations now use the exact same working technique as the verified 3.1.26 repair: the Marketplace manifest specifies **immutable, matching-version URLs for both `theme.js` and `user.css`**. Just search Solstice in Marketplace and install (or use the Marketplace update flow); **no Console script or database edits for new installations**. The responsive needle, record, controls, Studio preferences and saved lyrics stay intact. Existing Marketplace installations can retain cached installation records and may require a normal Marketplace refresh/reinstall before the new pinned references are used.
 
@@ -44,13 +44,15 @@
 
 **Install:** In Spotify, open **Marketplace → Themes → Solstice → Install**. Existing installations: **Marketplace → Installed → Solstice → Update** if offered; otherwise refresh Marketplace or reinstall Solstice. Solstice's separately stored Studio settings and lyric edits are not cleared by a normal theme update.
 
-**3.1.44 independent karaoke engine:** New saved Lyrics Studio toggles for Solstice word-sync engine, Smooth word timing, and Low-power karaoke (about 15 FPS); standard mode renders at about 30 FPS. No Spicy Lyrics installation required.
+**3.1.45 independent karaoke engine:** New saved Lyrics Studio toggles for Solstice word-sync engine, Smooth word timing, and Low-power karaoke (about 15 FPS); standard mode renders at about 30 FPS. No Spicy Lyrics installation required.
 
-**3.1.44 karaoke timing:** The independent engine now gently corrects Spotify playback clock drift instead of jumping every position sample; track changes and seeks still resynchronize immediately. Word-timing availability is cached to reduce work per frame.
+**3.1.45 karaoke timing:** The independent engine now gently corrects Spotify playback clock drift instead of jumping every position sample; track changes and seeks still resynchronize immediately. Word-timing availability is cached to reduce work per frame.
 
-**3.1.44 dynamic lyric progression fix:** Line-based LRC fills now use the frame-paced Solstice karaoke clock instead of the slow 1.6-second status refresh. Line and word gradients update in 2% steps to reduce repaints.
+**3.1.45 dynamic lyric progression fix:** Line-based LRC fills now use the frame-paced Solstice karaoke clock instead of the slow 1.6-second status refresh. Line and word gradients update in 2% steps to reduce repaints.
 
-**3.1.44 lyric sync fix:** Spotify playback clock corrections are now more responsive, avoiding long-lived lag. Lyrics Studio adds a saved **Lyric timing adjustment (ms)** slider (-1000 to +1000). Negative values make lyrics appear earlier; positive values later. Changes preserve existing lyric data and controls.
+**3.1.45 lyric sync fix:** Spotify playback clock corrections are now more responsive, avoiding long-lived lag. Lyrics Studio adds a saved **Lyric timing adjustment (ms)** slider (-1000 to +1000). Negative values make lyrics appear earlier; positive values later. Changes preserve existing lyric data and controls.
+
+**3.1.45 timing and progression:** Fixed a competing 1.6-second playback status loop overwriting the frame-paced lyrics. Fixed the Lyric timing adjustment slider's direction (negative is earlier), and limited text-gradient repaints with 4% increments. No settings reset required.
 
 ## Features
 
@@ -61,7 +63,7 @@
 - **Solstice Updater** — an in-theme Studio tab that checks the latest public release, opens Marketplace, and backs up/restores Studio settings and edited lyrics.
 - **Lightweight playback updates** — shared lyric timing and cached rendering.
 
-## Version 3.1.44
+## Version 3.1.45
 
 Includes font consistency and rendering performance fixes plus the **interactive vinyl deck** to Immersive Mode: drag the record clockwise to advance or counterclockwise to rewind, lift/drop the tonearm to pause/play, and use ±10-second buttons. Supports keyboard seeking and preserves Studio preferences, saved lyrics, and all previous visual features. The Studio Updater, saved settings and lyrics, immersive effects, and all previous features remain.
 
