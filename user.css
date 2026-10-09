@@ -1024,3 +1024,104 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 @media(prefers-reduced-motion:reduce){
   #sol-immersive #sol-vinyl:not(.sol-scratching){animation:none!important;}
 }
+
+
+/* Solstice 3.1.25 — match the actual illustrated turntable.
+   Left black grooved platter, central ART label, silver articulated arm at right.
+   !important layout is mirrored in theme.js as an independent fallback. */
+#sol-immersive .sol-deck {
+  --sol-platter-size:min(41vw,58vh,540px)!important;
+  position:relative!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  box-sizing:border-box!important;
+  width:var(--sol-platter-size)!important;
+  height:var(--sol-platter-size)!important;
+  padding:8px 6px 8px 8px!important;
+  isolation:isolate!important;
+  overflow:visible!important;
+  background:linear-gradient(140deg,#102d37e8,#071520d9)!important;
+  border:1px solid rgba(111,230,206,.28)!important;
+  border-radius:26px!important;
+  box-shadow:0 18px 45px #0006,inset 0 1px #ffffff16!important;
+}
+#sol-immersive .sol-deck::before{content:none!important;display:none!important;}
+#sol-immersive .sol-deck #sol-vinyl {
+  position:relative!important;
+  flex:none!important;
+  display:block!important;
+  box-sizing:border-box!important;
+  width:82%!important;
+  height:82%!important;
+  min-width:0!important;
+  min-height:0!important;
+  aspect-ratio:1!important;
+  border:8px solid #070d14!important;
+  border-radius:50%!important;
+  overflow:hidden!important;
+  background:repeating-radial-gradient(circle,#121e29 0 3px,#060b12 4px 6px,#1e2c38 7px 8px,#070d14 9px 11px)!important;
+  box-shadow:0 18px 42px #000b,inset 0 0 28px #000a!important;
+}
+#sol-immersive .sol-deck #sol-vinyl #sol-immersive-art{
+  position:absolute!important;
+  top:50%!important;left:50%!important;
+  width:40%!important;height:40%!important;
+  max-width:none!important;max-height:none!important;
+  transform:translate(-50%,-50%)!important;
+  display:block!important;object-fit:cover!important;
+  border:3px solid #0b151d!important;border-radius:50%!important;
+  box-shadow:0 0 0 2px #e1ffff2c,0 7px 18px #000b!important;
+  z-index:3!important;
+}
+#sol-immersive .sol-deck #sol-vinyl .sol-vinyl-label{
+  z-index:4!important;left:50%!important;top:50%!important;
+  width:9px!important;height:9px!important;
+}
+#sol-immersive .sol-deck #sol-tonearm,
+#sol-immersive .sol-deck #sol-tonearm.sol-needle-down{
+  position:absolute!important;display:block!important;
+  box-sizing:border-box!important;
+  right:0!important;top:4%!important;
+  left:auto!important;bottom:auto!important;
+  width:23%!important;height:80%!important;
+  min-width:0!important;min-height:0!important;
+  padding:0!important;margin:0!important;
+  z-index:25!important;opacity:1!important;visibility:visible!important;
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;overflow:visible!important;
+  transform:none!important;filter:drop-shadow(2px 4px 4px #000a)!important;
+  cursor:pointer!important;
+}
+#sol-immersive .sol-deck #sol-tonearm .sol-tonearm-svg{
+  display:block!important;width:100%!important;height:100%!important;
+  overflow:visible!important;opacity:1!important;visibility:visible!important;
+  pointer-events:none!important;
+}
+#sol-immersive #sol-tonearm .sol-tonearm-head{
+  transform-box:view-box!important;
+  transform-origin:98px 35px!important;
+  transform:rotate(-15deg);
+  transition:transform 600ms cubic-bezier(.2,.83,.23,1);
+}
+#sol-immersive #sol-tonearm.sol-needle-down .sol-tonearm-head{transform:rotate(0deg);}
+#sol-immersive #sol-tonearm .sol-tonearm-cartridge{transform:translateY(-7px);transition:transform 250ms ease 0ms;}
+#sol-immersive #sol-tonearm.sol-needle-down .sol-tonearm-cartridge{transform:translateY(0);transition-delay:350ms;}
+#sol-immersive #sol-vinyl:not(.sol-scratching){
+  animation:solstice-turntable-motor 1.8s linear infinite!important;
+  animation-delay:var(--sol-motor-offset,0s)!important;
+}
+@media(max-width:880px){
+  #sol-immersive .sol-deck{--sol-platter-size:min(53vw,41vh,320px)!important;}
+  #sol-immersive .sol-deck #sol-vinyl{width:82%!important;height:82%!important;}
+}
+@media(max-width:490px){
+  #sol-immersive .sol-deck{--sol-platter-size:min(76vw,38vh,265px)!important;}
+}
+@media(prefers-reduced-motion:reduce){
+  #sol-immersive #sol-tonearm .sol-tonearm-head,
+  #sol-immersive #sol-tonearm .sol-tonearm-cartridge{transition:none!important;}
+}
+:root.sol-reduced-motion #sol-immersive #sol-tonearm .sol-tonearm-head,
+:root.sol-reduced-motion #sol-immersive #sol-tonearm .sol-tonearm-cartridge{transition:none!important;}
