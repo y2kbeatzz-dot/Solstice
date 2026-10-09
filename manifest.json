@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.27 — fixed public Marketplace package: matching responsive Immersive theme.js and user.css, working groove-tracking needle, correctly sized vinyl, smooth 33⅓ RPM spin, synced lyrics and Studio.",
-  "preview": "preview-v3.1.27.svg",
+  "description": "Solstice 3.1.28 — expressive synchronized lyrics with active-line progress, 8 font choices, Flow/Glow/Calm motion and font-size controls in Studio; plus responsive vinyl, animated needle and glass.",
+  "preview": "preview-v3.1.28.svg",
   "readme": "README.md",
-  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@9050747b3a003c3cf4e3396f4c050253ffd893f1/user.css",
+  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@90fdecdc72249c829b29c52973f1ab49c3e152b0/user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@9050747b3a003c3cf4e3396f4c050253ffd893f1/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@90fdecdc72249c829b29c52973f1ab49c3e152b0/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.27"
+  "version": "3.1.28"
 }
