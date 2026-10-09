@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.9 — visible song play buttons, restored expanded Now Playing artwork, glass, immersive player and synchronized lyrics.",
+  "description": "Solstice 3.1.10 — restored Explicit E badges, always-visible song play buttons, immersive glass player, synchronized lyrics and Studio.",
   "preview": "preview.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@72cacbc4a57b0852275e60523a72f6dff13164ba/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@47c1d5d11318098d0de3cdbf3c416a241a16106a/theme.js"
   ],
   "authors": [
     {
