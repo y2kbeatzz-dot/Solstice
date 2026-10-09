@@ -743,11 +743,12 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
   box-shadow:0 14px 38px #000c,0 0 30px rgba(var(--sol-rgb),.18),inset 0 0 22px #000!important;
   touch-action:none!important;
   cursor:grab!important;
-  will-change:transform;
+  will-change:auto;
 }
 #sol-immersive #sol-vinyl.sol-vinyl-grabbed{
   cursor:grabbing!important;
-  box-shadow:0 15px 35px #000e,0 0 34px rgba(var(--sol-rgb),.52)!important;
+  will-change:transform!important;
+  box-shadow:0 15px 35px #000d!important;
 }
 #sol-immersive #sol-vinyl.sol-scratching{
   animation:none!important;
@@ -876,15 +877,15 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 :root.sol-reduced-motion #sol-immersive .sol-deck #sol-tonearm{transition:none!important;}
 
 
-/* Solstice 3.1.21: real articulated needle with a fixed bearing and
+/* Solstice 3.1.22: real articulated needle with a fixed bearing and
    a moving S-curve tonearm. Earlier CSS-only arm parts are superseded.
    The record is smaller, and the album cover is a true center label. */
 #sol-immersive .sol-deck{
   --sol-platter-size:min(34vw,43vh,390px)!important;
 }
 #sol-immersive #sol-vinyl #sol-immersive-art{
-  width:25%!important;
-  height:25%!important;
+  width:34%!important;
+  height:34%!important;
   border:3px solid #18242e!important;
 }
 #sol-immersive #sol-vinyl .sol-vinyl-label{
