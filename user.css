@@ -1489,3 +1489,25 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 :root.sol-reduced-motion .sol-lyrics-scroll .sol-line-text{
   animation:none!important;transition:none!important;filter:none!important;
 }
+
+
+/* Actual Enhanced LRC / NetEase karaoke: each token has its own timestamp.
+   No approximate word timing is generated from plain LRCLIB lines. */
+.sol-lyrics-scroll .sol-line .sol-word {
+  display:inline;
+  white-space:pre-wrap;
+  background-image:linear-gradient(90deg,
+    var(--sol-accent,#63e6ce) 0%,
+    var(--sol-accent,#63e6ce) var(--sol-word-progress,0%),
+    #a7bac1 var(--sol-word-progress,0%),
+    #a7bac1 100%)!important;
+  background-clip:text!important;-webkit-background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+}
+:root.sol-dynamic-lyrics:not(.sol-karaoke-off) .sol-lyrics-scroll .sol-line.sol-active:has(.sol-word) .sol-line-text{
+  background:none!important;-webkit-text-fill-color:currentColor!important;
+}
+:root.sol-karaoke-off .sol-lyrics-scroll .sol-line .sol-word,
+:root:not(.sol-dynamic-lyrics) .sol-lyrics-scroll .sol-line .sol-word{
+  background:none!important;-webkit-text-fill-color:currentColor!important;
+}
