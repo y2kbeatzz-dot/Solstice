@@ -1,4 +1,4 @@
-/* Solstice 3.1.8 — optimized glass and immersive design. */
+/* Solstice 3.1.9 — visible play controls and restored Now Playing artwork. */
 :root {
   --sol-accent:#63e6ce; --sol-rgb:99,230,206; --sol-panel-rgb:12,22,32;
   --sol-second-rgb:99,230,206; --sol-third-rgb:99,230,206;
@@ -67,13 +67,12 @@ body {font-family:'Segoe UI Variable','Segoe UI',sans-serif;}
 /* Transparent major panels and player; artwork visible through every major route. */
 .Root__nav-bar,.Root__right-sidebar,.main-yourLibraryX-libraryContainer,
 .main-nowPlayingView-nowPlayingView,.main-nowPlayingView-nowPlayingWidgets,
-[class*="main-yourLibraryX-entryPoints"],[class*="main-nowPlayingView-nowPlayingWidget"]{
+[class*="main-yourLibraryX-entryPoints"]{
   background:var(--sol-panel)!important;background-image:none!important;
   backdrop-filter:var(--sol-filter)!important;-webkit-backdrop-filter:var(--sol-filter)!important;
   border:1px solid rgba(255,255,255,.13)!important;border-radius:var(--sol-radius)!important;
   box-shadow:inset 0 1px rgba(255,255,255,.10),0 14px 24px #0003!important;
 }
-.Root__right-sidebar > *,.main-nowPlayingView-nowPlayingView > div,
 [class*="main-nowPlayingView-sectionHeader"],.main-home-homeHeader,
 .main-nowPlayingView-section,.main-yourLibraryX-libraryItem,
 .main-yourLibraryX-listItem,.main-card-card,.main-cardImage-imageWrapper,
@@ -368,7 +367,7 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 }
 .Root__nav-bar,.Root__right-sidebar,.main-yourLibraryX-libraryContainer,
 .main-nowPlayingView-nowPlayingView,.main-nowPlayingView-nowPlayingWidgets,
-[class*="main-yourLibraryX-entryPoints"],[class*="main-nowPlayingView-nowPlayingWidget"] {
+[class*="main-yourLibraryX-entryPoints"] {
   background:var(--sol-live-surface)!important;
   backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
   -webkit-backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
@@ -474,4 +473,60 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 @media (prefers-reduced-motion:reduce) {
   #sol-art-stage .sol-art-frame, #sol-immersive .sol-immersive-bg,
   #sol-vinyl, #sol-ambient-bars i {animation:none!important;}
+}
+
+/* v3.1.9: Make native Spotify play buttons available without mouse hover.
+   Style the actual buttons so keyboard and pointer interaction still work. */
+.main-card-card .main-card-PlayButtonContainer,
+.main-card-cardContainer .main-card-PlayButtonContainer,
+.view-homeShortcutsGrid-shortcut .view-homeShortcutsGrid-PlayButtonContainer {
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  transform:translateY(0)!important;
+}
+@media (pointer:coarse) {
+  .main-card-card .main-card-PlayButtonContainer,
+  .main-card-cardContainer .main-card-PlayButtonContainer {display:block!important;}
+}
+.main-trackList-trackListRow .main-trackList-rowImagePlayButton,
+.main-trackList-trackListRow .main-trackList-rowPlayButton,
+[data-testid="tracklist-row"] [class*="rowImagePlayButton"],
+[data-testid="tracklist-row"] [class*="rowPlayButton"] {
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  color:var(--sol-accent)!important;
+}
+.main-trackList-rowMarker:has(.main-trackList-rowImagePlayButton) .main-trackList-number,
+.main-trackList-rowMarker:has(.main-trackList-rowPlayButton) .main-trackList-number {
+  visibility:hidden!important;
+}
+/* Nested Now Playing wrappers previously applied several opaque glass layers
+   over the artwork, leaving a small gray-looking rectangle. Keep glass on the
+   outer sidebar, not on the cover art and the internal React layout. */
+.Root__right-sidebar .main-nowPlayingView-nowPlayingView,
+.Root__right-sidebar .main-nowPlayingView-nowPlayingWidgets {
+  background:transparent!important;
+  background-image:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.Root__right-sidebar [class*="nowPlayingView-coverArtContainer"],
+.Root__right-sidebar [class*="nowPlayingWidget-coverArtContainer"] {
+  background-color:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+}
+.Root__right-sidebar [data-testid="cover-art-image"],
+.Root__right-sidebar .main-nowPlayingWidget-coverArt img,
+.Root__right-sidebar .main-nowPlayingView-nowPlayingWidgets img {
+  visibility:visible!important;
+  opacity:1!important;
+  object-fit:cover;
 }
