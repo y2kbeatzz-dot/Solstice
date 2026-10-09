@@ -1,10 +1,10 @@
-/* Solstice 3.1.13 — Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
+/* Solstice 3.1.14 — Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
 (() => {
   'use strict';
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.13';
+  const SOLSTICE_VERSION = '3.1.14';
   const KEY = 'solstice-v3-prefs';
   const OLD_KEY = 'solstice-v2-prefs';
   const LYRICS = 'solstice-v2-lyrics'; // Retain all locally saved v2.x lyrics.
@@ -468,8 +468,9 @@
       }
       if(!manifest)throw new Error('The release servers could not be reached.');
       const match=String(manifest.description||'').match(/Solstice\s+v?(\d+\.\d+\.\d+)/i);
-      if(!match)throw new Error('Version unavailable in public manifest');
-      updateState.latest=match[1];
+      const release=typeof manifest.version==='string'&&/^\d+\.\d+\.\d+$/.test(manifest.version)?manifest.version:match?.[1];
+      if(!release)throw new Error('Version unavailable in public manifest');
+      updateState.latest=release;
       updateState.checkedAt=Date.now();
       const difference=versionCompare(updateState.latest,SOLSTICE_VERSION);
       updateState.message=difference>0?
@@ -481,6 +482,22 @@
     }finally{
       clearTimeout(watchdog);
       updateState.checking=false;
+      updateUpdaterPanel();
+    }
+  }
+  function refreshSolsticeMarketplaceListing() {
+    // Marketplace caches the manifest by repository in sessionStorage, while
+    // preview images use a separate browser cache. Do not touch Studio prefs.
+    const shouldReload=typeof window.confirm==='function'
+      ?window.confirm('Refresh the Solstice listing? Spotify’s interface will reload. Your Studio settings and lyrics will remain saved.')
+      :true;
+    if(!shouldReload)return;
+    keepUpdateSnapshot();
+    try {window.sessionStorage.removeItem('y2kbeatzz-dot-Solstice');}
+    catch(error){console.warn('[Solstice] Could not clear listing cache',error);}
+    try {window.location.reload();}
+    catch(error){
+      updateState.message='Please close Spotify completely and reopen it to refresh Marketplace.';
       updateUpdaterPanel();
     }
   }
@@ -570,7 +587,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.13</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.14</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -596,7 +613,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.13 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.14 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -607,8 +624,9 @@
         '<p id="sol-updater-version" class="sol-note"></p><p id="sol-updater-status" class="sol-note" role="status"></p>'+
         '<p>Check for the newest Solstice on GitHub, then update through Spicetify Marketplace. Studio settings and lyric edits remain saved between versions.</p>'+
         '<div class="sol-actions"><button id="sol-updater-check" class="sol-primary" type="button">Check for updates</button>'+
-        '<button id="sol-updater-open" type="button">Open Marketplace to update ↗</button></div>'+
-        '<p class="sol-note">Marketplace may display an older description while its index refreshes. This updater checks the public release directly.</p></section>'+
+        '<button id="sol-updater-open" type="button">Open Marketplace to update ↗</button>'+
+        '<button id="sol-updater-refresh" type="button">Refresh Marketplace listing</button></div>'+
+        '<p class="sol-note">Marketplace can cache an older theme description. Refresh Marketplace listing reloads Spotify’s interface without clearing your Studio settings.</p></section>'+
         '<section class="sol-card"><span class="sol-pill">KEEP YOUR SETTINGS</span><h2>Backup & restore</h2>'+
         '<p>Solstice automatically retains your Studio preferences and saved lyrics when you install a new version through Marketplace. Export a backup for extra protection.</p>'+
         '<div class="sol-actions"><button id="sol-updater-export" type="button">Export settings + lyrics</button>'+
@@ -617,6 +635,7 @@
         '<p class="sol-note">Only your Solstice settings and edited lyrics are included. No account information is exported.</p></section></div>';
       $('#sol-updater-check').onclick=checkSolsticeUpdates;
       $('#sol-updater-open').onclick=openSolsticeMarketplace;
+      $('#sol-updater-refresh').onclick=refreshSolsticeMarketplaceListing;
       $('#sol-updater-export').onclick=exportSolsticeBackup;
       $('#sol-updater-import').onclick=()=>$('#sol-updater-file').click();
       $('#sol-updater-file').onchange=async event=>{
