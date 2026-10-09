@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.30';
+  const SOLSTICE_VERSION = '3.1.31';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -110,9 +110,17 @@
     root.classList.toggle('sol-reduced-motion', !!prefs.reducedMotion);
     $('#sol-mini')?.classList.toggle('sol-hidden', !prefs.miniPlayer);
     $('#sol-immersive')?.classList.toggle('sol-no-viz', !prefs.visualizer);
+    syncLyricFonts();
     try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch {}
   }
-  const setPref = (name, value) => { prefs[name] = value; style(); };
+  function syncLyricFonts() {
+    const font = LYRIC_FONTS[prefs.lyricFont] || LYRIC_FONTS.system;
+    for (const selector of ['#sol-side-lines','#sol-live-lines','#sol-immersive-lines','#sol-studio-lyrics','#sol-lyric-font-preview']) {
+      const el = $(selector);
+      if (el && el.style.fontFamily !== font) el.style.fontFamily = font;
+    }
+  }
+  const setPref = (name, value) => { prefs[name] = value; style(); if (name === 'lyricFont') syncLyricFonts(); };
   function notify(message) {
     if (!prefs.showPopups) return;
     $('#sol-toast')?.remove();
@@ -404,7 +412,7 @@
     // Share one LRC lookup, track fingerprint and playback position across all panes.
     const data = lyricText();
     const snapshot = {data, lines:cachedLRC(data), fingerprint:trackKey() + '|' + data, position};
-    drawLyricBox($('#sol-side-lines'), 'sidebar', snapshot);
+    if ($('#sol-sidebar-lyrics')?.isConnected) drawLyricBox($('#sol-side-lines'), 'sidebar', snapshot);
     if (!$('#sol-live-panel')?.hidden) drawLyricBox($('#sol-live-lines'), 'sidebar', snapshot);
     if (!$('#sol-overlay')?.hidden && $('#sol-studio-lyrics')) drawLyricBox($('#sol-studio-lyrics'), 'studio', snapshot);
     if (!$('#sol-immersive')?.hidden) drawLyricBox($('#sol-immersive-lines'), 'immersive', snapshot);
@@ -849,6 +857,7 @@
       $('#sol-clear').onclick=()=>{delete savedLyrics[trackKey()];try{localStorage.setItem(LYRICS,JSON.stringify(savedLyrics));}catch{}$('#sol-editor').value='';updateLyricUI();};
       $('#sol-import').onclick=()=>$('#sol-lyricfile').click();
       $('#sol-lyricfile').onchange=async e=>{const f=e.target.files?.[0];if (f && f.size < 1_000_000) $('#sol-editor').value=await f.text();};
+      syncLyricFonts();
       updateLyricUI();
       if (prefs.autoLyrics && !lyricCache.has(trackSignature(t)) && !savedLyrics[trackKey()]) queueLyrics();
     } else if (tab === 'status') {
@@ -1187,7 +1196,7 @@
     const len=$('#sol-immersive-length');if(len){const next=fmt(seekMax);if(len.textContent!==next)len.textContent=next;}
     // Live SVG tonearm/record scrubbing remains responsive without doing
     // expensive lyric layout recalculations on a dragging record.
-    if(!vinylScrub)updateLyricUI(posMs);
+    if(!vinylScrub && (!document.hidden) && ($('#sol-sidebar-lyrics')?.isConnected || !$('#sol-live-panel')?.hidden || !$('#sol-immersive')?.hidden || !$('#sol-overlay')?.hidden))updateLyricUI(posMs);
   }
   function onTrackChanged() {
     const t=track(), signature=trackSignature(t);
@@ -1260,7 +1269,12 @@
     // 800ms lyric/progress ticks and 4s sidebar checks reduce unnecessary CPU/DOM work.
     timer=setInterval(tickPlayback,800);
     // Short cadence only for real word-timestamp lyrics, not approximate line fills.
-    setInterval(()=>{if(document.hidden||!prefs.dynamicLyrics||!prefs.karaoke||!isPlaying())return;const data=lyricText();if(data&&cachedLRC(data).some(l=>l.words?.length))updateLyricUI();},320);
+    setInterval(()=>{
+      if(document.hidden||!prefs.dynamicLyrics||!prefs.karaoke||!isPlaying()||vinylScrub)return;
+      if(!$('#sol-immersive:not([hidden])') && !$('#sol-live-panel:not([hidden])') && !$('#sol-sidebar-lyrics') && !$('#sol-overlay:not([hidden])'))return;
+      const data=lyricText();
+      if(data && cachedLRC(data).some(l=>l.words?.length))updateLyricUI();
+    },450);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { onTrackChanged(); tickPlayback(); mountSidebar(); repairExplicitBadges(); } });
     setInterval(()=>{ if (document.hidden) return; mountArtwork(); mountSidebar(); onTrackChanged(); repairExplicitBadges(); if (!$('#sol-overlay')?.hidden) renderDiagnostics(); },4000);
   }
