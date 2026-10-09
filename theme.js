@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.35';
+  const SOLSTICE_VERSION = '3.1.36';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -272,7 +272,7 @@
       if(!match)continue;
       const entries=[...match[3].matchAll(/\((\d+),(\d+),\d+\)([^(]*)/g)];
       if(entries.length<2)continue;
-      const words=entries.map(m=>({t:+m[1],text:m[3]})).filter(w=>w.text && Number.isFinite(w.t));
+      const words=entries.map(m=>({t:+match[1] + +m[1],text:m[3]})).filter(w=>w.text && Number.isFinite(w.t));
       if(words.length<2)continue;
       lines.push('['+wordTimeStamp(+match[1])+']'+
         words.map(w=>'<'+wordTimeStamp(w.t)+'>'+w.text).join(''));
@@ -287,12 +287,11 @@
       if(!match)continue;
       const entries=[...match[3].matchAll(/\((\d+),(\d+)\)([^(]*)/g)];
       if(entries.length<2)continue;
-      let current=+match[1], words=[];
+      let words=[];
       for(const w of entries){
         const offset=+w[1], length=+w[2];
         if(!w[3])continue;
-        words.push({t:current+offset,text:w[3]});
-        current+=length;
+        words.push({t:+match[1]+offset,text:w[3]});
       }
       if(words.length<2)continue;
       lines.push('['+wordTimeStamp(+match[1])+']'+
@@ -750,7 +749,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.35</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.36</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -790,7 +789,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.35 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.36 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -1212,7 +1211,7 @@
     const len=$('#sol-immersive-length');if(len){const next=fmt(seekMax);if(len.textContent!==next)len.textContent=next;}
     // Live SVG tonearm/record scrubbing remains responsive without doing
     // expensive lyric layout recalculations on a dragging record.
-    if(!vinylScrub && ($('#sol-sidebar-lyrics')?.isConnected || !$('#sol-live-panel')?.hidden || !$('#sol-immersive')?.hidden || (!$('#sol-overlay')?.hidden && studioTab==='lyrics')))updateLyricUI(posMs);
+    if(!vinylScrub && ($('#sol-sidebar-lyrics')?.isConnected || !$('#sol-live-panel')?.hidden || !$('#sol-immersive')?.hidden || (!$('#sol-overlay')?.hidden && studioTab==='lyrics')) && !cachedLRC(lyricText()).some(l=>l.words?.length))updateLyricUI(posMs);
   }
   function onTrackChanged() {
     const t=track(), signature=trackSignature(t);
@@ -1285,12 +1284,15 @@
     // 800ms lyric/progress ticks and 4s sidebar checks reduce unnecessary CPU/DOM work.
     timer=setInterval(tickPlayback,1600);
     // Short cadence only for real word-timestamp lyrics, not approximate line fills.
+    // Smooth word timing is independent of slower player/status polling.
+    let lastWordText='', hasWordTiming=false;
     setInterval(()=>{
       if(document.hidden||!prefs.dynamicLyrics||!prefs.karaoke||!isPlaying()||vinylScrub)return;
-      if(!$('#sol-immersive:not([hidden])') && !$('#sol-live-panel:not([hidden])') && !$('#sol-sidebar-lyrics') && !$('#sol-overlay:not([hidden])'))return;
+      if($('#sol-immersive')?.hidden && $('#sol-live-panel')?.hidden && $('#sol-overlay')?.hidden && !$('#sol-sidebar-lyrics')?.isConnected)return;
       const data=lyricText();
-      if(data && cachedLRC(data).some(l=>l.words?.length))updateLyricUI();
-    },1000);
+      if(data!==lastWordText){ lastWordText=data; hasWordTiming=!!data && cachedLRC(data).some(l=>l.words?.length); }
+      if(hasWordTiming)updateLyricUI(progress());
+    },75);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { onTrackChanged(); tickPlayback(); mountSidebar(); repairExplicitBadges(); } });
     setInterval(()=>{ if (document.hidden) return; mountArtwork(); mountSidebar(); onTrackChanged(); repairExplicitBadges(); if (!$('#sol-overlay')?.hidden) renderDiagnostics(); },6000);
   }
