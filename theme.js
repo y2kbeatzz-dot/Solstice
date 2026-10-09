@@ -1,10 +1,10 @@
-/* Solstice 3.1.18 — Confirmed explicit badge repair and Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
+/* Solstice 3.1.19 — Confirmed explicit badge repair and Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
 (() => {
   'use strict';
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.18';
+  const SOLSTICE_VERSION = '3.1.19';
   const KEY = 'solstice-v3-prefs';
   const OLD_KEY = 'solstice-v2-prefs';
   const LYRICS = 'solstice-v2-lyrics'; // Retain all locally saved v2.x lyrics.
@@ -40,6 +40,7 @@
   let currentId = '', lastCover = '', lookupTimer, fetchAbort, studioTab = 'overview', studioClock, lastLyricKey = '', lastSideKey = '';
   let artworkGeneration = 0, lastColorStatus = 'Waiting for a song', lastLyricStatus = 'Play a track to fetch lyrics';
   let initialized = false, timer = null, eventBound = false, lastNowPlaying = '', dragState = null;
+  let vinylScrub = null;
 
   function player() { return window.Spicetify?.Player; }
   function isPlaying() { try { return !!player()?.isPlaying?.(); } catch { return false; } }
@@ -587,7 +588,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.18</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.19</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -613,7 +614,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.18 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.19 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -699,12 +700,106 @@
     write('sol-status-route',location.pathname || '/');
   }
 
+
+  // The vinyl scrubs Spotify's track position. It cannot reverse the PCM audio.
+  function vinylPointerAngle(e,rect) {
+    return Math.atan2(e.clientY-rect.top-rect.height/2,e.clientX-rect.left-rect.width/2);
+  }
+  function vinylAngleDelta(delta) {return Math.atan2(Math.sin(delta),Math.cos(delta));}
+  function seekVinyl(position) {
+    const length=duration();
+    if(!length||!Number.isFinite(position))return false;
+    const next=Math.round(clamp(position,0,length,0));
+    try {player()?.seek?.(next);}catch(e){console.warn('[Solstice] Vinyl seek failed',e);return false;}
+    const value=$('#sol-vinyl');
+    if(value){value.setAttribute('aria-valuenow',String(Math.round(next*1000/length)));value.setAttribute('aria-valuetext',fmt(next));}
+    return true;
+  }
+  function seekVinylRelative(ms) {
+    seekVinyl((vinylScrub?.targetMs ?? progress())+ms);
+  }
+  function vinylRotation(el) {
+    try {
+      const matrix=new DOMMatrixReadOnly(getComputedStyle(el).transform);
+      return Math.atan2(matrix.b,matrix.a)*180/Math.PI;
+    }catch{return 0;}
+  }
+  function finishVinylScrub(e) {
+    const state=vinylScrub;
+    if(!state||(e?.pointerId!==undefined&&e.pointerId!==state.pointerId))return;
+    vinylScrub=null;
+    const disc=$('#sol-vinyl');
+    if(disc) {
+      if(disc.hasPointerCapture?.(state.pointerId))try{disc.releasePointerCapture(state.pointerId);}catch{}
+      disc.classList.remove('sol-scratching','sol-vinyl-grabbed');
+      disc.style.removeProperty('--sol-scratch-angle');
+      const phase=((state.rotation%360)+360)%360;
+      disc.style.animationDelay=(-phase/360*13)+'s';
+    }
+    if(state.moved&&state.trackUri===track().uri)seekVinyl(state.targetMs);
+    const hint=$('#sol-vinyl-hint');
+    if(hint)hint.textContent='↶ Drag record to rewind or fast-forward ↷';
+    if(state.wasPlaying&&state.trackUri===track().uri)try{player()?.play?.();}catch{}
+  }
+  function setupInteractiveVinyl() {
+    const disc=$('#sol-vinyl');
+    if(!disc)return;
+    $('#sol-rewind-10').onclick=()=>seekVinylRelative(-10000);
+    $('#sol-forward-10').onclick=()=>seekVinylRelative(10000);
+    $('#sol-tonearm').onclick=()=>player()?.togglePlay?.();
+    disc.addEventListener('pointerdown',e=>{
+      if(e.button!==0||vinylScrub||!duration())return;
+      const rect=disc.getBoundingClientRect();
+      if(!rect.width||!rect.height)return;
+      const state={pointerId:e.pointerId,previous:vinylPointerAngle(e,rect),
+        rotation:vinylRotation(disc),targetMs:progress(),wasPlaying:isPlaying(),
+        trackUri:track().uri,moved:false,lastSeek:0};
+      vinylScrub=state;
+      disc.style.setProperty('--sol-scratch-angle',state.rotation+'deg');
+      disc.classList.add('sol-scratching','sol-vinyl-grabbed');
+      try{disc.setPointerCapture(e.pointerId);}catch{}
+      if(state.wasPlaying)try{player()?.pause?.();}catch{}
+      e.preventDefault();
+    });
+    disc.addEventListener('pointermove',e=>{
+      const state=vinylScrub;
+      if(!state||e.pointerId!==state.pointerId)return;
+      const angle=vinylPointerAngle(e,disc.getBoundingClientRect());
+      const delta=vinylAngleDelta(angle-state.previous);
+      state.previous=angle;
+      if(Math.abs(delta)<.002)return;
+      state.moved=true;
+      state.rotation+=delta*180/Math.PI;
+      // One 360° turn moves 12s: usable turntable-style scrub sensitivity.
+      state.targetMs=clamp(state.targetMs+delta/(2*Math.PI)*12000,0,duration(),0);
+      disc.style.setProperty('--sol-scratch-angle',state.rotation+'deg');
+      const hint=$('#sol-vinyl-hint');
+      if(hint)hint.textContent='CUE '+fmt(state.targetMs)+' / '+fmt(duration());
+      const now=performance.now();
+      if(now-state.lastSeek>170){seekVinyl(state.targetMs);state.lastSeek=now;}
+      e.preventDefault();
+    });
+    disc.addEventListener('pointerup',finishVinylScrub);
+    disc.addEventListener('pointercancel',finishVinylScrub);
+    disc.addEventListener('lostpointercapture',finishVinylScrub);
+    disc.addEventListener('keydown',e=>{
+      const step=e.shiftKey?15000:5000;
+      if(e.key==='ArrowLeft'||e.key==='ArrowDown')seekVinylRelative(-step);
+      else if(e.key==='ArrowRight'||e.key==='ArrowUp')seekVinylRelative(step);
+      else if(e.key==='Home')seekVinyl(0);
+      else if(e.key==='End')seekVinyl(duration());
+      else if(e.key==='Enter'||e.key===' ')player()?.togglePlay?.();
+      else return;
+      e.preventDefault();
+    });
+  }
+
   function mountImmersive() {
     if ($('#sol-immersive')) return;
     const el = make(`<section id="sol-immersive" hidden aria-label="Solstice Immersive Mode">
       <div class="sol-immersive-bg"></div><div class="sol-immersive-shade"></div>
       <header class="sol-immersive-top"><strong>☀ SOLSTICE <span>IMMERSIVE</span></strong><div class="sol-actions"><button id="sol-immersive-fullscreen" type="button" aria-label="Toggle system fullscreen">⛶ Fullscreen</button><button id="sol-immersive-exit" type="button" aria-label="Close immersive mode">✕ Close</button></div></header><p id="sol-fullscreen-status" role="status" hidden></p>
-      <div class="sol-immersive-center"><div class="sol-vinyl-area"><div id="sol-vinyl"><img id="sol-immersive-art" alt="Current album artwork"><div class="sol-vinyl-label"></div></div><div id="sol-ambient-bars" aria-label="Ambient playback animation"></div></div>
+      <div class="sol-immersive-center"><div class="sol-vinyl-area"><div class="sol-deck"><div id="sol-vinyl" role="slider" tabindex="0" aria-label="Rotate the record to rewind or fast-forward" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="0" aria-valuetext="0:00"><img id="sol-immersive-art" alt="Current album artwork"><div class="sol-vinyl-label"></div></div><button id="sol-tonearm" type="button" aria-label="Lift or drop the needle to pause or play" aria-pressed="false" title="Needle: play or pause"><span class="sol-arm-shaft"></span><span class="sol-arm-needle"></span></button></div><div id="sol-vinyl-hint" aria-live="off">↶ Drag record to rewind or fast-forward ↷</div><div class="sol-deck-transport"><button id="sol-rewind-10" type="button" aria-label="Rewind 10 seconds">↶ 10s</button><button id="sol-forward-10" type="button" aria-label="Forward 10 seconds">10s ↷</button></div><div id="sol-ambient-bars" aria-label="Ambient playback animation"></div></div>
       <div class="sol-immersive-details"><div class="sol-pill">NOW PLAYING</div><h1 id="sol-immersive-title">Nothing playing</h1><p id="sol-immersive-artist">Start a song</p><div id="sol-immersive-lines" class="sol-lyrics-scroll"></div></div></div>
       <footer class="sol-immersive-controls"><button id="sol-immersive-back" aria-label="Previous track" type="button">⏮</button><button id="sol-immersive-play" aria-label="Play or pause" type="button">▶</button><button id="sol-immersive-next" aria-label="Next track" type="button">⏭</button><span id="sol-immersive-position">0:00</span><input id="sol-immersive-seek" aria-label="Seek position" type="range" min="0" max="1000" value="0"><span id="sol-immersive-length">0:00</span></footer></section>`);
     document.body.append(el);
@@ -715,6 +810,7 @@
     $('#sol-immersive-back').onclick=()=>player()?.back?.();
     $('#sol-immersive-next').onclick=()=>player()?.next?.();
     $('#sol-immersive-seek').addEventListener('change',e=>{if(duration()>0)player()?.seek?.(Math.round(duration()*Number(e.target.value)/1000));});
+    setupInteractiveVinyl();
     $('#sol-ambient-bars').innerHTML=Array.from({length:24},(_,i)=>`<i style="--i:${i};--h:${10+((i*13+7)%28)}"></i>`).join('');
   }
   function showFullscreenStatus(message) {
@@ -752,6 +848,7 @@
     updateTrackDisplays();updateLyricUI();
   }
   function closeImmersive() {
+    if(vinylScrub)finishVinylScrub();
     const el=$('#sol-immersive');if(!el)return;
     if(document.fullscreenElement===el && document.exitFullscreen) Promise.resolve(document.exitFullscreen()).catch(()=>{});
     el.hidden=true;
@@ -807,7 +904,11 @@
     if (document.hidden) return;
     const paused=!isPlaying();
     root.classList.toggle('sol-paused',paused);
-    const posMs=progress(),seekMax=duration(),ratio=seekMax?clamp(posMs/seekMax,0,1,0):0;
+    const posMs=vinylScrub?.targetMs ?? progress(),seekMax=duration(),ratio=seekMax?clamp(posMs/seekMax,0,1,0):0;
+    const needle=$('#sol-tonearm');
+    if(needle){needle.classList.toggle('sol-needle-down',!paused);needle.setAttribute('aria-pressed',String(!paused));}
+    const vinyl=$('#sol-vinyl');
+    if(vinyl&&!vinylScrub){vinyl.setAttribute('aria-valuenow',String(Math.round(ratio*1000)));vinyl.setAttribute('aria-valuetext',fmt(posMs));}
     for(const selector of ['#sol-mini-seek','#sol-immersive-seek']){
       const el=$(selector);
       const next=String(Math.round(ratio*1000));
