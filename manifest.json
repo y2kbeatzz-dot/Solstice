@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.13 — built-in Studio Updater, settings and lyrics backup/restore, dynamic artwork, explicit badges, synced lyrics and Immersive Mode.",
+  "description": "Immersive glass theme with artwork-reactive colors, synchronized lyrics, always-visible play controls, Solstice Studio, and an in-theme updater with settings backup.",
   "preview": "preview.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@72e80d5a9abd3073f62bb29b95f29f3608557be5/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@bba25f678b036e1d678d274912f996bd2d328516/theme.js"
   ],
   "authors": [
     {
@@ -20,5 +20,6 @@
     "dynamic",
     "lyrics"
   ],
-  "branch": "main"
+  "branch": "main",
+  "version": "3.1.14"
 }
