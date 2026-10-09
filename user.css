@@ -997,3 +997,29 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 :root.sol-reduced-motion #sol-immersive #sol-tonearm .sol-stylus-glow{
   transition:none!important;
 }
+
+
+/* Solstice 3.1.24: guaranteed turntable motor.
+   The backup styles embedded in theme.js must include the spinning keyframes.
+   The vinyl rotates while Spotify plays and pauses only when Spotify pauses;
+   direct manual drag takes precedence via .sol-scratching. */
+@keyframes solstice-turntable-motor{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+#sol-immersive #sol-vinyl:not(.sol-scratching){
+  animation:solstice-turntable-motor 13s linear infinite!important;
+  animation-play-state:running!important;
+  transform-origin:center center!important;
+}
+:root.sol-paused #sol-immersive #sol-vinyl:not(.sol-scratching){
+  animation-play-state:paused!important;
+}
+#sol-immersive #sol-vinyl.sol-scratching{
+  animation:none!important;
+}
+/* Honor the user's reduce-motion preference rather than forcing motion. */
+:root.sol-reduced-motion #sol-immersive #sol-vinyl{animation:none!important;}
+@media(prefers-reduced-motion:reduce){
+  #sol-immersive #sol-vinyl{animation:none!important;}
+}
