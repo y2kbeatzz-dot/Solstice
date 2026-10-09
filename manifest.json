@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.33 — animated lyrics with 8 font choices and true word-by-word karaoke from imported Enhanced LRC or optional NetEase YRC/klyric, with LRCLIB line-sync fallback. Plus responsive vinyl, needle and Studio. Lyrics Studio autosave and performance improvements.",
+  "description": "Solstice 3.1.34 — fixes Lyrics Studio switch controls, font selection, and lyric edit/import saving. Includes immersive vinyl, synchronized lyrics and performance improvements.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
-  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@a83ceb899b361744fd36dbfb6b8380eedd2d1c06/user.css",
+  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@723af1ad34933694c2f5c669273784d8e6e6e277/user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@a83ceb899b361744fd36dbfb6b8380eedd2d1c06/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@723af1ad34933694c2f5c669273784d8e6e6e277/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.33"
+  "version": "3.1.34"
 }
