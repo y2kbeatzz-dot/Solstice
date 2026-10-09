@@ -627,7 +627,7 @@
           if(!response.ok)throw new Error('HTTP '+response.status);
           const body=await response.json();
           if(body.content && body.encoding==='base64') {
-            const raw=atob(body.content.replace(/\\s/g,''));
+            const raw=atob(body.content.replace(/\s/g,''));
             manifest=JSON.parse(raw);
           } else manifest=body;
           if(manifest?.version)break;
@@ -635,8 +635,8 @@
         }catch(e){lastError=e;if(controller.signal.aborted)break;}
       }
       if(!manifest)throw lastError || new Error('Unable to read the release manifest');
-      const match=String(manifest.description||'').match(/Solstice\\s+v?(\\d+\\.\\d+\\.\\d+)/i);
-      const release=typeof manifest.version==='string'&&/^\\d+\\.\\d+\\.\\d+$/.test(manifest.version)?manifest.version:match?.[1];
+      const match=String(manifest.description||'').match(/Solstice\s+v?(\d+\.\d+\.\d+)/i);
+      const release=typeof manifest.version==='string'&&/^\d+\.\d+\.\d+$/.test(manifest.version)?manifest.version:match?.[1];
       if(!release)throw new Error('Release version missing from manifest');
       updateState.latest=release;
       updateState.checkedAt=Date.now();
