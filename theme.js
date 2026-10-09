@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.37';
+  const SOLSTICE_VERSION = '3.1.38';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -374,18 +374,45 @@
         current?.classList.add('sol-active');
         if (variant === 'sidebar' || variant === 'immersive') centerLyricInBox(box,current);
       }
-      // True per-word progress only when the provider supplied explicit timestamps.
+      // Only the currently singing word changes continuously. Completed words
+      // get their final state once, rather than updating every word per tick.
       if (index >= 0 && prefs.dynamicLyrics && prefs.karaoke && lines[index].words?.length) {
         const tokens=lines[index].words;
         const current=box.querySelector('[data-line="'+index+'"]');
-        if (current) for(const span of current.querySelectorAll('.sol-word')){
-          const j=Number(span.dataset.word), word=tokens[j];
-          if (!word) continue;
-          const end=tokens[j+1]?.t ?? lines[index+1]?.t ?? word.t+700;
-          const pct=Math.round(100*clamp((position-word.t)/Math.max(end-word.t,1),0,1,0));
-          if(span.dataset.fill!==String(pct)){
-            span.dataset.fill=String(pct);
-            span.style.setProperty('--sol-word-progress',pct+'%');
+        if(current){
+          const spans=current.querySelectorAll('.sol-word');
+          let lo=0,hi=tokens.length-1,wordIndex=-1;
+          while(lo<=hi){const mid=(lo+hi)>>>1;if(position>=tokens[mid].t){wordIndex=mid;lo=mid+1;}else hi=mid-1;}
+          const previous=Number(box.dataset.wordIndex ?? -1);
+          if(box.dataset.wordLine!==String(index)){
+            box.dataset.wordLine=String(index);
+            box.dataset.wordIndex='-1';
+            for(let j=0;j<spans.length;j++){
+              spans[j].style.setProperty('--sol-word-progress','0%');
+              spans[j].dataset.fill='0';
+            }
+          }
+          const old=Number(box.dataset.wordIndex ?? -1);
+          if(old!==wordIndex){
+            // Seek backwards resets words ahead of the playback position.
+            const from=Math.min(old,wordIndex)+1, to=Math.max(old,wordIndex);
+            for(let j=Math.max(0,from);j<=to;j++){
+              const done=j<wordIndex?100:0;
+              if(spans[j]){spans[j].dataset.fill=String(done);spans[j].style.setProperty('--sol-word-progress',done+'%');}
+            }
+            if(old>wordIndex) for(let j=Math.max(0,wordIndex+1);j<spans.length;j++){
+              if(spans[j]?.dataset.fill!=='0'){spans[j].dataset.fill='0';spans[j].style.setProperty('--sol-word-progress','0%');}
+            }
+            box.dataset.wordIndex=String(wordIndex);
+          }
+          if(wordIndex>=0 && spans[wordIndex]){
+            const word=tokens[wordIndex];
+            const end=tokens[wordIndex+1]?.t ?? lines[index+1]?.t ?? word.t+700;
+            const pct=Math.round(100*clamp((position-word.t)/Math.max(end-word.t,1),0,1,0));
+            if(spans[wordIndex].dataset.fill!==String(pct)){
+              spans[wordIndex].dataset.fill=String(pct);
+              spans[wordIndex].style.setProperty('--sol-word-progress',pct+'%');
+            }
           }
         }
       }
@@ -406,14 +433,26 @@
       }
     }
   }
-  function updateLyricUI(position = progress()) {
+  function updateLyricUI(position = progress(), wordOnly = false) {
     // Share one LRC lookup, track fingerprint and playback position across all panes.
     const data = lyricText();
     const snapshot = {data, lines:cachedLRC(data), fingerprint:trackKey() + '|' + data, position};
-    if ($('#sol-sidebar-lyrics')?.isConnected) drawLyricBox($('#sol-side-lines'), 'sidebar', snapshot);
-    if (!$('#sol-live-panel')?.hidden) drawLyricBox($('#sol-live-lines'), 'sidebar', snapshot);
-    if (!$('#sol-overlay')?.hidden && studioTab==='lyrics' && $('#sol-studio-lyrics')) drawLyricBox($('#sol-studio-lyrics'), 'studio', snapshot);
-    if (!$('#sol-immersive')?.hidden) drawLyricBox($('#sol-immersive-lines'), 'immersive', snapshot);
+    // High-frequency word updates render a single foreground pane only.
+    // Side panels still receive full updates on track/line changes.
+    if(wordOnly){
+      const immersive=$('#sol-immersive');
+      const live=$('#sol-live-panel');
+      const studio=$('#sol-overlay');
+      if(immersive && !immersive.hidden) drawLyricBox($('#sol-immersive-lines'),'immersive',snapshot);
+      else if(live && !live.hidden) drawLyricBox($('#sol-live-lines'),'sidebar',snapshot);
+      else if(studio && !studio.hidden && studioTab==='lyrics') drawLyricBox($('#sol-studio-lyrics'),'studio',snapshot);
+      else if($('#sol-sidebar-lyrics')?.isConnected) drawLyricBox($('#sol-side-lines'),'sidebar',snapshot);
+    }else{
+      if ($('#sol-sidebar-lyrics')?.isConnected) drawLyricBox($('#sol-side-lines'), 'sidebar', snapshot);
+      if (!$('#sol-live-panel')?.hidden) drawLyricBox($('#sol-live-lines'), 'sidebar', snapshot);
+      if (!$('#sol-overlay')?.hidden && studioTab==='lyrics' && $('#sol-studio-lyrics')) drawLyricBox($('#sol-studio-lyrics'), 'studio', snapshot);
+      if (!$('#sol-immersive')?.hidden) drawLyricBox($('#sol-immersive-lines'), 'immersive', snapshot);
+    }
     const status = $('#sol-fetch-status'); if (status && status.textContent !== lastLyricStatus) status.textContent = lastLyricStatus;
   }
   async function fetchLyrics(force = false) {
@@ -755,7 +794,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.37</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.38</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -795,7 +834,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.37 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.38 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -1297,7 +1336,7 @@
       if($('#sol-immersive')?.hidden && $('#sol-live-panel')?.hidden && $('#sol-overlay')?.hidden && !$('#sol-sidebar-lyrics')?.isConnected)return;
       const data=lyricText();
       if(data!==lastWordText){ lastWordText=data; hasWordTiming=!!data && cachedLRC(data).some(l=>l.words?.length); }
-      if(hasWordTiming)updateLyricUI(progress());
+      if(hasWordTiming)updateLyricUI(progress(),true);
     },75);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { onTrackChanged(); tickPlayback(); mountSidebar(); repairExplicitBadges(); } });
     setInterval(()=>{ if (document.hidden) return; mountArtwork(); mountSidebar(); onTrackChanged(); repairExplicitBadges(); if (!$('#sol-overlay')?.hidden) renderDiagnostics(); },6000);
