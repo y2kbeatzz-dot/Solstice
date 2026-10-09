@@ -1021,5 +1021,5 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 /* Honor the user's reduce-motion preference rather than forcing motion. */
 :root.sol-reduced-motion #sol-immersive #sol-vinyl{animation:none!important;}
 @media(prefers-reduced-motion:reduce){
-  #sol-immersive #sol-vinyl{animation:none!important;}
+  #sol-immersive #sol-vinyl:not(.sol-scratching){animation:none!important;}
 }
