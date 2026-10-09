@@ -1398,7 +1398,7 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 }
 
 
-/* Solstice 3.1.28 — expressive synchronized lyrics and font studio.
+/* Solstice 3.1.29 — expressive synchronized lyrics and font studio.
    Scoped to Solstice lyric panes, not native Spotify lyrics or menus. */
 #sol-immersive .sol-lyrics-scroll,
 #sol-sidebar-lyrics .sol-lyrics-scroll,
