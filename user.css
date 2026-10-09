@@ -1256,7 +1256,7 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
   transition:transform 690ms cubic-bezier(.2,.8,.2,1)!important;
 }
 #sol-immersive #sol-tonearm.sol-needle-down .sol-tonearm-head{
-  transform:rotate(27deg)!important;
+  transform:rotate(var(--sol-groove-angle,27deg))!important;
 }
 #sol-immersive #sol-tonearm .sol-tonearm-cartridge{
   transform:translateY(-7px)!important;
