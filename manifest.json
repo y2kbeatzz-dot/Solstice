@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.34 — fixes Lyrics Studio switch controls, font selection, and lyric edit/import saving. Includes immersive vinyl, synchronized lyrics and performance improvements.",
+  "description": "Solstice 3.1.35 — visibly distinct Flow, Glow and Calm lyric effects, updated live Studio preview, persistent font and lyric settings, immersive vinyl and synced karaoke.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
-  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@af65b5a07d6505c55bcb7b7e82d434232fe4a8eb/user.css",
+  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@80501630b9a4eba59f780e245ef7447be1db7515/user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@af65b5a07d6505c55bcb7b7e82d434232fe4a8eb/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@80501630b9a4eba59f780e245ef7447be1db7515/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.34"
+  "version": "3.1.35"
 }
