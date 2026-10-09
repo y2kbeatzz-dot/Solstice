@@ -1,10 +1,10 @@
-/* Solstice 3.1.29 — Confirmed explicit badge repair and Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
+/* Solstice 3.1.30 — performance and font reliability. Existing settings and lyrics retained. */
 (() => {
   'use strict';
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.29';
+  const SOLSTICE_VERSION = '3.1.30';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -1260,7 +1260,7 @@
     // 800ms lyric/progress ticks and 4s sidebar checks reduce unnecessary CPU/DOM work.
     timer=setInterval(tickPlayback,800);
     // Short cadence only for real word-timestamp lyrics, not approximate line fills.
-    setInterval(()=>{if(document.hidden||!prefs.dynamicLyrics||!prefs.karaoke||!isPlaying())return;const data=lyricText();if(data&&cachedLRC(data).some(l=>l.words?.length))updateLyricUI();},170);
+    setInterval(()=>{if(document.hidden||!prefs.dynamicLyrics||!prefs.karaoke||!isPlaying())return;const data=lyricText();if(data&&cachedLRC(data).some(l=>l.words?.length))updateLyricUI();},320);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { onTrackChanged(); tickPlayback(); mountSidebar(); repairExplicitBadges(); } });
     setInterval(()=>{ if (document.hidden) return; mountArtwork(); mountSidebar(); onTrackChanged(); repairExplicitBadges(); if (!$('#sol-overlay')?.hidden) renderDiagnostics(); },4000);
   }
