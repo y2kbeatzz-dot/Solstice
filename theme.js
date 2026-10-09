@@ -1,10 +1,10 @@
-/* Solstice 3.1.17 — Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
+/* Solstice 3.1.18 — Confirmed explicit badge repair and Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
 (() => {
   'use strict';
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.17';
+  const SOLSTICE_VERSION = '3.1.18';
   const KEY = 'solstice-v3-prefs';
   const OLD_KEY = 'solstice-v2-prefs';
   const LYRICS = 'solstice-v2-lyrics'; // Retain all locally saved v2.x lyrics.
@@ -587,7 +587,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.17</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.18</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -613,7 +613,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.17 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.18 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -830,11 +830,56 @@
     redrawArtwork();updateTrackDisplays();updatePalette(t);queueLyrics();
     if(studioTab==='lyrics' && !$('#sol-overlay')?.hidden)renderStudio('lyrics');
   }
+
+  // Explicit badge repair copied from the exact inline DevTools fix that
+  // restored the E in the user's Spotify. Prior CSS-only releases did not.
+  // Keep it lightweight: observe added row nodes, never attributes or text.
+  function repairExplicitBadge(badge) {
+    if (!badge || !badge.matches?.('.x-explicit-label')) return;
+    const set = (el, property, value) => {
+      if (el.style.getPropertyValue(property) !== value ||
+          el.style.getPropertyPriority(property) !== 'important')
+        el.style.setProperty(property, value, 'important');
+    };
+    set(badge, '--background-base', '#17242c');
+    const icon = badge.querySelector('.x-explicit-icon');
+    if (!icon) return;
+    set(icon, 'color', '#17242c');
+    set(icon, '-webkit-text-fill-color', '#17242c');
+    set(icon, 'font-size', '11px');
+    set(icon, 'opacity', '1');
+    set(icon, 'visibility', 'visible');
+  }
+  function repairExplicitBadges(node = document) {
+    if (node.nodeType === 1) {
+      if (node.matches('.x-explicit-label')) repairExplicitBadge(node);
+      if (node.matches('.x-explicit-icon'))
+        repairExplicitBadge(node.closest('.x-explicit-label'));
+    }
+    node.querySelectorAll?.('.x-explicit-label').forEach(repairExplicitBadge);
+  }
+  function watchExplicitBadges() {
+    const host = $('.Root') || document.body;
+    if (!host) return;
+    repairExplicitBadges(host);
+    const observer = new MutationObserver(records => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (node.nodeType !== 1) continue;
+          repairExplicitBadges(node);
+        }
+      }
+    });
+    // New songs/virtualized rows are patched on insertion; no polling or
+    // attribute watching needed. This does not touch Spicetify settings.
+    observer.observe(host, {childList:true, subtree:true});
+  }
+
   function initialize() {
     if(initialized || !document.body) return;
     if(!$('.Root') && !$('#main')) return;
     initialized=true;
-    mountArtwork();mountUI();style();onTrackChanged();mountSidebar();
+    mountArtwork();mountUI();style();onTrackChanged();mountSidebar();watchExplicitBadges();
     if(!eventBound && player()?.addEventListener){
       const p=player();
       p.addEventListener('songchange',onTrackChanged);
@@ -844,8 +889,8 @@
     // Event-driven track updates, with a light fallback for Spotify route changes.
     // 800ms lyric/progress ticks and 4s sidebar checks reduce unnecessary CPU/DOM work.
     timer=setInterval(tickPlayback,800);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) { onTrackChanged(); tickPlayback(); mountSidebar(); } });
-    setInterval(()=>{ if (document.hidden) return; mountArtwork(); mountSidebar(); onTrackChanged(); if (!$('#sol-overlay')?.hidden) renderDiagnostics(); },4000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { onTrackChanged(); tickPlayback(); mountSidebar(); repairExplicitBadges(); } });
+    setInterval(()=>{ if (document.hidden) return; mountArtwork(); mountSidebar(); onTrackChanged(); repairExplicitBadges(); if (!$('#sol-overlay')?.hidden) renderDiagnostics(); },4000);
   }
   const bootstrap=setInterval(()=>{initialize();if(initialized)clearInterval(bootstrap);},250);
   setTimeout(()=>clearInterval(bootstrap),30000);
