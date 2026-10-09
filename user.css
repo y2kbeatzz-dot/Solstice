@@ -1,0 +1,477 @@
+/* Solstice 3.1.7 — optimized glass and immersive design. */
+:root {
+  --sol-accent:#63e6ce; --sol-rgb:99,230,206; --sol-panel-rgb:12,22,32;
+  --sol-second-rgb:99,230,206; --sol-third-rgb:99,230,206;
+  --sol-blur:18px;--sol-radius:20px;--sol-glass-alpha:.16;--sol-art-blur:12px;
+  --sol-glow-strength:.6;--sol-ambient-alpha:.32;--sol-lyric-size:13px;
+  --sol-panel:rgba(var(--sol-panel-rgb),var(--sol-glass-alpha));
+  --sol-elevated:rgba(var(--sol-panel-rgb),calc(var(--sol-glass-alpha) + .16));
+  --sol-border:rgba(var(--sol-rgb),.23);
+  --sol-filter:blur(var(--sol-blur)) saturate(150%);
+  --sol-softglow:0 0 24px rgba(var(--sol-rgb),calc(var(--sol-glow-strength) * .33));
+  --spice-button:var(--sol-accent); --spice-button-active:var(--sol-accent);
+  --text-bright-accent:var(--sol-accent);--essential-bright-accent:var(--sol-accent);
+}
+html,body {background:#070c12!important;}
+body {font-family:'Segoe UI Variable','Segoe UI',sans-serif;}
+/* Fixed artwork now lives INSIDE the .Root stacking context and underneath its real child panels. */
+.Root{position:relative!important;isolation:isolate!important;background:transparent!important;}
+.Root > :not(#sol-art-stage) {position:relative;z-index:1;}
+#sol-art-stage{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;contain:paint;background:
+  radial-gradient(ellipse 100% 85% at 15% 22%,rgba(var(--sol-second-rgb),.48),transparent 72%),
+  radial-gradient(ellipse 90% 78% at 88% 80%,rgba(var(--sol-third-rgb),.54),transparent 74%),
+  linear-gradient(140deg,#060a12,rgba(var(--sol-panel-rgb),1) 60%,#080b11);}
+#sol-art-stage .sol-art-frame{position:absolute;inset:-12%;opacity:0;transform:scale(1.1);
+  background-size:cover;background-position:center center;
+  filter:blur(var(--sol-art-blur)) saturate(145%) brightness(.9);
+  animation:sol-drift 25s ease-in-out infinite alternate;transition:opacity 1.2s ease;will-change:transform,opacity;}
+#sol-art-stage .sol-art-frame.sol-on{opacity:1;}
+#sol-art-stage .sol-art-gradient{position:absolute;inset:0;background:
+  radial-gradient(ellipse 95% 82% at 82% 21%,rgba(var(--sol-rgb),.24),transparent 78%),
+  radial-gradient(ellipse 76% 90% at 14% 82%,rgba(var(--sol-second-rgb),.29),transparent 79%),
+  linear-gradient(135deg,rgba(var(--sol-third-rgb),.13),rgba(9,16,24,.10) 62%,rgba(var(--sol-panel-rgb),.18));
+  transition:background 1.2s ease;}
+#sol-art-stage .sol-art-shade{position:absolute;inset:0;background:rgba(5,8,13,var(--sol-ambient-alpha));}
+@keyframes sol-drift{0%{transform:scale(1.16) translate3d(-2%,-1.5%,0) rotate(-.7deg)}50%{transform:scale(1.23) translate3d(2%,1%,0) rotate(.9deg)}100%{transform:scale(1.17) translate3d(-1%,2%,0) rotate(-.4deg)}}
+@keyframes sol-zoom{0%{transform:scale(1.15)}100%{transform:scale(1.3)}}
+:root[data-sol-art-mode="zoom"] #sol-art-stage .sol-art-frame{animation:sol-zoom 16s ease-in-out infinite alternate;}
+:root[data-sol-art-mode="still"] #sol-art-stage .sol-art-frame,
+:root.sol-motion-off #sol-art-stage .sol-art-frame{animation:none!important;transform:scale(1.17)!important;}
+/* Avoid opaque Spotify semantic tokens, while retaining elevated menus/tooltips. */
+.Root,.Root__main-view,.Root__nav-bar,.Root__right-sidebar,#main,.encore-dark-theme {
+  --background-base:transparent;
+  --background-tinted-base:rgba(var(--sol-panel-rgb),.09);
+  --background-tinted-highlight:rgba(var(--sol-rgb),.10);
+  --background-highlight:rgba(var(--sol-panel-rgb),.14);
+  --background-elevated-base:rgba(16,24,34,.82);
+  --background-elevated-highlight:rgba(30,42,55,.93);
+  --background-unsafe-for-overlay:rgba(9,15,24,.92);
+  --decorative-subdued:rgba(var(--sol-rgb),.35);
+}
+#main,.Root__top-container,.Root__main-view,.Root__main-view > *,
+.Root__main-view main,.main-view-container,.main-view-container__scroll-node,
+.main-view-container__scroll-node-child,.main-topBar-background,
+.main-home-homeHeader,.main-home-content,.main-home-home,
+.main-actionBar-ActionBar,.main-actionBarBackground-background,
+.main-entityHeader-background,.main-entityHeader-backgroundColor,
+.main-entityHeader-overlay,.main-entityHeader-container,
+.main-artistOverview-overview,.artist-artistOverview-artistOverviewContent,
+.playlist-playlist-playlistContent,
+[class*="main-home-homeContent"],[class*="main-contentSpacing-spacing"],
+[class*="main-view-container__scroll-node-child"],[class*="main-entityHeader-background"],
+[class*="main-actionBarBackground"],[class*="main-sectionHeader-background"],
+[class*="main-topBar-topbarContent"], [class*="main-topBar-container"] {
+  background:transparent!important;background-image:none!important;
+}
+.Root__main-view{background:rgba(var(--sol-panel-rgb),.065)!important;}
+/* Transparent major panels and player; artwork visible through every major route. */
+.Root__nav-bar,.Root__right-sidebar,.main-yourLibraryX-libraryContainer,
+.main-nowPlayingView-nowPlayingView,.main-nowPlayingView-nowPlayingWidgets,
+[class*="main-yourLibraryX-entryPoints"],[class*="main-nowPlayingView-nowPlayingWidget"]{
+  background:var(--sol-panel)!important;background-image:none!important;
+  backdrop-filter:var(--sol-filter)!important;-webkit-backdrop-filter:var(--sol-filter)!important;
+  border:1px solid rgba(255,255,255,.13)!important;border-radius:var(--sol-radius)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.10),0 14px 24px #0003!important;
+}
+.Root__right-sidebar > *,.main-nowPlayingView-nowPlayingView > div,
+[class*="main-nowPlayingView-sectionHeader"],.main-home-homeHeader,
+.main-nowPlayingView-section,.main-yourLibraryX-libraryItem,
+.main-yourLibraryX-listItem,.main-card-card,.main-cardImage-imageWrapper,
+[class*="main-shelf-Shelf"],.main-trackList-trackListHeader,
+.main-artistOverview-overview,[class*="main-topBar-topbarContent"]{
+  background-color:rgba(var(--sol-panel-rgb),.08)!important;
+  background-image:none!important;
+}
+.main-card-card,.main-yourLibraryX-listItem,.main-trackList-trackListRow,
+.main-cardImage-imageWrapper{transition:background .22s ease,box-shadow .22s ease,transform .22s ease;}
+.main-card-card:hover,.main-yourLibraryX-listItem:hover,.main-trackList-trackListRow:hover{
+  background:rgba(var(--sol-rgb),.11)!important;}
+.main-card-card:hover{transform:translateY(-2px);box-shadow:var(--sol-softglow);}
+/* Route-specific giant gradients formerly masked the cover behind Home / Album / Artist. */
+.main-entityHeader-background,.main-entityHeader-backgroundColor,
+.main-entityHeader-overlay,[class*="main-entityHeader-background"],
+[class*="playlist-playlist-playlistContent"]:not(img),
+[class*="artist-artistOverview-background"]:not(img){
+  background-color:transparent!important;background-image:none!important;
+}
+/* Playback uses Spotify's REAL controls, not a second fragile replacement bar. */
+.Root__now-playing-bar{position:relative!important;z-index:4!important;
+  margin:7px 12px 9px!important;border-radius:22px!important;
+  background:var(--sol-elevated)!important;
+  border:1px solid rgba(var(--sol-rgb),.40)!important;
+  box-shadow:0 15px 30px #0006,0 0 28px rgba(var(--sol-rgb),calc(var(--sol-glow-strength) * .26))!important;
+  backdrop-filter:blur(calc(var(--sol-blur) + 7px)) saturate(170%)!important;
+  -webkit-backdrop-filter:blur(calc(var(--sol-blur) + 7px)) saturate(170%)!important;
+  overflow:visible!important;}
+.Root__now-playing-bar:before{content:'';position:absolute;left:4%;right:4%;height:1px;top:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--sol-accent),transparent);}
+.main-nowPlayingBar-nowPlayingBar{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;margin:0!important;}
+.main-playPauseButton-button,button[data-testid="control-button-playpause"]{
+  background:var(--sol-accent)!important;color:#061116!important;box-shadow:var(--sol-softglow)!important;}
+.playback-bar .x-progressBar-fillColor,.playback-bar .progress-bar__fill,
+.x-progressBar-fillColor,[class*="progressBar-fill"]{background:var(--sol-accent)!important;box-shadow:0 0 12px rgba(var(--sol-rgb),.6)!important;}
+.main-type-brightAccent,[class*="main-yourLibraryX"] [class*="main-type-brightAccent"],
+.main-trackList-playingIcon,[data-testid="now-playing-icon"],
+.main-trackList-trackListRow[aria-selected="true"] [class*="main-type"],
+.main-yourLibraryX-listItem[aria-selected="true"] [class*="main-type"],
+[aria-current="true"] [class*="main-type"]{color:var(--sol-accent)!important;}
+.main-yourLibraryX-listItem[aria-selected="true"],.main-trackList-trackListRow[aria-selected="true"]{
+  background:rgba(var(--sol-rgb),.17)!important;box-shadow:inset 3px 0 rgba(var(--sol-rgb),.7);}
+input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-accent);color:#031218;}
+
+/* Solstice overlay, studio and shared widgets — scoped so native Spotify popovers work. */
+#sol-launcher,#sol-toast,#sol-overlay,#sol-mini,#sol-immersive{font-family:'Segoe UI Variable','Segoe UI',sans-serif;color:#f3fcff;box-sizing:border-box;}
+#sol-launcher{position:fixed;z-index:9995;right:22px;bottom:116px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.3);border-radius:16px;background:var(--sol-accent);color:#061219;
+  box-shadow:0 5px 30px rgba(var(--sol-rgb),.40);padding:11px 14px;font-weight:800;letter-spacing:.03em;}
+#sol-launcher:hover{transform:translateY(-2px);}
+#sol-overlay{position:fixed;inset:0;z-index:100005;background:rgba(1,5,12,.73);backdrop-filter:blur(18px);
+  display:grid;place-items:center;padding:20px;}
+#sol-overlay[hidden],#sol-immersive[hidden],#sol-mini.sol-hidden{display:none!important;}
+#sol-shell{width:min(1030px,96vw);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;
+  background:linear-gradient(155deg,rgba(20,34,46,.96),rgba(7,14,25,.98));
+  border:1px solid rgba(var(--sol-rgb),.36);border-radius:26px;box-shadow:0 28px 110px #000e;}
+#sol-shell .sol-header{display:flex;justify-content:space-between;align-items:center;padding:22px 26px 12px;border-bottom:1px solid #ffffff18;}
+#sol-shell h1{font-size:25px;margin:2px 0;color:#fff;letter-spacing:-.025em;}
+#sol-shell small{color:#a9bacb;font-size:12px;}
+#sol-shell .sol-header small{color:var(--sol-accent);font-weight:800;letter-spacing:.08em;}
+#sol-tabs{padding:13px 25px;display:flex;gap:6px;flex-wrap:wrap;}
+#sol-tabs button,#sol-shell button,#sol-mini button,#sol-immersive button{font-family:inherit;cursor:pointer;
+  background:rgba(255,255,255,.10);color:inherit;border:1px solid rgba(255,255,255,.17);
+  border-radius:12px;padding:9px 12px;transition:background .18s,transform .18s;}
+#sol-tabs button:hover,#sol-shell button:hover,#sol-mini button:hover,#sol-immersive button:hover{background:rgba(var(--sol-rgb),.23);}
+#sol-tabs button.active,#sol-shell button.sol-primary{background:var(--sol-accent);color:#031317;font-weight:800;}
+#sol-body{overflow-y:auto;min-height:330px;padding:0 25px 25px;}
+#sol-body .sol-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+#sol-body .sol-card{border-radius:20px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.13);padding:20px;}
+#sol-body .sol-featured{background:radial-gradient(ellipse at 85% 0%,rgba(var(--sol-rgb),.20),transparent 72%),rgba(255,255,255,.04);}
+#sol-body h2{font-size:19px;margin:8px 0 12px;color:#f9fbff;}
+#sol-body p{color:#adbdce;line-height:1.45;margin:8px 0 16px;}
+#sol-body .sol-pill,#sol-immersive .sol-pill{display:inline-block;border:1px solid rgba(var(--sol-rgb),.38);color:var(--sol-accent);font-size:11px;font-weight:800;border-radius:99px;padding:6px 10px;}
+#sol-body .sol-actions,.sol-immersive-top .sol-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;}
+#sol-body label.sol-control{display:grid;grid-template-columns:minmax(110px,1fr) minmax(100px,1fr) 28px;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #ffffff0e;}
+#sol-body label.sol-control input{width:100%;}
+#sol-body label.sol-control select{grid-column:span 2;background:#202d3b;color:white;border:1px solid #ffffff30;padding:8px;border-radius:9px;}
+#sol-body label.sol-control output{font-size:11px;color:var(--sol-accent);text-align:right;}
+#sol-body label.sol-switch{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 14px;min-height:32px;padding:10px 0;border-bottom:1px solid #ffffff0e;}
+#sol-body label.sol-switch input{grid-column:2;grid-row:1;transform:scale(1.2);}
+#sol-body label.sol-switch small{grid-column:1;grid-row:2;color:#92abb6;}
+#sol-body textarea{box-sizing:border-box;width:100%;min-height:190px;resize:vertical;color:#fff;background:#07111b;border-radius:12px;border:1px solid #ffffff30;padding:14px;font:13px/1.5 Consolas,monospace;}
+#sol-body .sol-note{font-size:12px;color:#91aab8;}
+#sol-sidebar-lyrics{display:flex;flex-direction:column;flex-shrink:0;min-height:138px;max-height:260px;overflow:hidden;
+  border:1px solid var(--sol-border);border-radius:var(--sol-radius);background:var(--sol-elevated);
+  margin:12px 8px 20px;padding:12px 14px;box-shadow:0 8px 22px #0003;backdrop-filter:var(--sol-filter);}
+#sol-sidebar-lyrics .sol-side-head{display:flex;align-items:center;justify-content:space-between;font-size:16px;}
+#sol-sidebar-lyrics button{cursor:pointer;border:1px solid var(--sol-border);border-radius:9px;padding:5px 8px;color:var(--sol-accent);background:rgba(0,0,0,.16);}
+#sol-sidebar-lyrics small{opacity:.6;font-size:10px;margin-top:6px;}
+.sol-lyrics-scroll{max-height:300px;overflow-y:auto;scroll-behavior:smooth;overflow-x:hidden;min-height:80px;padding:9px 3px;}
+.sol-lyrics-scroll .sol-line{margin:9px 0;font-size:17px;line-height:1.48;font-weight:700;opacity:.45;color:#dce7ec;transition:transform .3s,color .3s,opacity .3s;}
+.sol-lyrics-scroll .sol-line.sol-active{color:var(--sol-accent);opacity:1;transform:translateX(4px);text-shadow:0 0 14px rgba(var(--sol-rgb),.38);}
+#sol-side-lines .sol-line{font-size:var(--sol-lyric-size);font-weight:600;line-height:1.45;margin:7px 0;}
+.sol-lyrics-scroll .sol-empty,.sol-lyrics-scroll .sol-untimed{font-size:13px;line-height:1.5;color:#a3b0bc;}
+#sol-toast{position:fixed;z-index:100010;bottom:118px;right:18px;display:flex;gap:10px;
+  max-width:340px;padding:13px 16px;background:rgba(10,18,26,.9);border:1px solid var(--sol-border);
+  border-radius:16px;box-shadow:var(--sol-softglow);opacity:0;transform:translateY(13px);transition:opacity .3s,transform .3s;pointer-events:none;}
+#sol-toast.sol-show{opacity:1;transform:translateY(0);}
+/* Immersive mode = a full-window interface, optionally browser fullscreen. */
+#sol-immersive{position:fixed;inset:0;z-index:100001;overflow:hidden;background:#080e17;display:flex;flex-direction:column;
+  --immersive-shade:rgba(2,6,14,.56);isolation:isolate;}
+#sol-immersive .sol-immersive-bg{position:absolute;inset:-14%;z-index:-3;filter:blur(48px) saturate(170%);
+  background-position:center;background-size:cover;opacity:.85;animation:sol-zoom 20s ease-in-out infinite alternate;}
+#sol-immersive .sol-immersive-shade{position:absolute;inset:0;z-index:-2;background:
+  radial-gradient(circle at 30% 38%,rgba(var(--sol-rgb),.21),transparent 60%),linear-gradient(90deg,rgba(4,8,13,.32),var(--immersive-shade));}
+/* Keep controls clear of Spotify's native Windows titlebar (top-right 3 buttons).
+   The header reserves a button row below the native chrome, so the controls
+   remain usable in normal/maximized windows without covering the song view. */
+#sol-immersive > .sol-immersive-top{
+  position:relative;z-index:4;display:flex;justify-content:flex-start;align-items:flex-start;
+  box-sizing:border-box;min-height:136px;padding:24px 28px 12px;gap:12px;
+}
+#sol-immersive > .sol-immersive-top > strong{letter-spacing:.15em;font-size:13px;line-height:20px;white-space:nowrap;}
+#sol-immersive > .sol-immersive-top > strong span{font-weight:500;opacity:.65;}
+#sol-immersive > .sol-immersive-top > .sol-actions{
+  position:absolute;top:82px;right:28px;z-index:5;
+  display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;
+  gap:8px;margin:0;max-width:calc(100% - 28px);
+}
+#sol-immersive > .sol-immersive-top > .sol-actions button{white-space:nowrap;min-height:40px;}
+/* Genuine Fullscreen API removes the native titlebar, allowing a compact row. */
+#sol-immersive:fullscreen > .sol-immersive-top{min-height:90px;}
+#sol-immersive:fullscreen > .sol-immersive-top > .sol-actions{top:24px;}
+.sol-immersive-center{flex:1;min-height:0;display:grid;align-items:center;grid-template-columns: minmax(210px,1fr) minmax(320px,1fr);gap:5vw;
+  width:min(1350px,94vw);margin:0 auto;}
+.sol-vinyl-area{position:relative;display:grid;place-items:center;min-height:300px;}
+#sol-vinyl{position:relative;aspect-ratio:1;width:min(34vw,460px);min-width:230px;border-radius:50%;overflow:hidden;
+  border:8px solid rgba(5,8,17,.97);box-shadow:0 22px 60px #000c,0 0 80px rgba(var(--sol-rgb),.38);
+  background:repeating-radial-gradient(circle at center,#10151b 0 6px,#0a0c0f 7px 10px);animation:sol-record 13s linear infinite;}
+#sol-vinyl:after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:50%;
+  background:repeating-radial-gradient(circle at center,transparent 0 5px,#ffffff0c 6px 7px,transparent 8px 15px),
+  linear-gradient(130deg,rgba(255,255,255,.22),transparent 28%,transparent 70%,rgba(255,255,255,.12));}
+#sol-vinyl img{height:100%;width:100%;object-fit:cover;border-radius:50%;}
+#sol-vinyl .sol-vinyl-label{position:absolute;z-index:1;left:48%;top:48%;width:4%;height:4%;background:#0b111a;border:3px solid #ffffff77;border-radius:50%;}
+@keyframes sol-record{to{transform:rotate(360deg);}}
+:root.sol-paused #sol-vinyl,:root.sol-paused #sol-ambient-bars i{animation-play-state:paused!important;}
+:root.sol-vinyl-off #sol-vinyl{border-radius:22px!important;animation:none!important;}
+:root.sol-vinyl-off #sol-vinyl img{border-radius:14px!important;}
+:root.sol-vinyl-off #sol-vinyl:after,:root.sol-vinyl-off .sol-vinyl-label{display:none!important;}
+#sol-ambient-bars{display:flex;justify-content:center;align-items:end;gap:5px;height:48px;margin-top:18px;}
+#sol-ambient-bars i{display:block;width:7px;min-height:7px;height:calc(var(--h) * 1px);border-radius:99px;
+  background:var(--sol-accent);box-shadow:0 0 13px rgba(var(--sol-rgb),.65);
+  transform-origin:bottom;animation:sol-bars 900ms ease-in-out infinite alternate;animation-delay:calc(var(--i) * -76ms);}
+@keyframes sol-bars{0%{transform:scaleY(.28);opacity:.55}100%{transform:scaleY(1.25);opacity:1}}
+:root.sol-viz-off #sol-ambient-bars,#sol-immersive.sol-no-viz #sol-ambient-bars{display:none;}
+.sol-immersive-details{min-width:0;color:#fff;}
+.sol-immersive-details h1{font-size:clamp(30px,4vw,61px);line-height:1.02;letter-spacing:-.04em;margin:14px 0 7px;}
+.sol-immersive-details > p{font-size:clamp(16px,1.6vw,21px);color:#d2e2ea;margin:0 0 26px;}
+#sol-immersive-lines{max-height:34vh;mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 82%,transparent 100%);}
+#sol-immersive-lines .sol-line{font-size:clamp(20px,2.3vw,31px);margin:18px 0;opacity:.38;}
+#sol-immersive-lines .sol-line.sol-active{opacity:1;transform:translateX(7px);}
+:root.sol-karaoke-off #sol-immersive-lines .sol-line{opacity:.86;}
+.sol-immersive-controls{display:flex;gap:16px;align-items:center;justify-content:center;padding:14px 5vw 28px;}
+#sol-immersive-play{border-radius:50%!important;background:var(--sol-accent)!important;color:#07111a!important;
+  font-size:23px!important;width:56px;height:56px;box-shadow:var(--sol-softglow);}
+#sol-immersive-seek{flex:1;max-width:500px;accent-color:var(--sol-accent);}
+#sol-immersive-position,#sol-immersive-length{font-size:13px;min-width:35px;}
+/* Draggable picture-in-picture style mini player (inside Spotify only). */
+#sol-mini{position:fixed;right:24px;bottom:128px;z-index:9998;width:290px;max-width:calc(100vw - 15px);
+  border-radius:18px;border:1px solid var(--sol-border);box-shadow:0 18px 50px #0009,var(--sol-softglow);
+  background:rgba(var(--sol-panel-rgb),.88);backdrop-filter:blur(22px) saturate(180%);padding:10px;}
+#sol-mini-handle{cursor:grab;display:flex;justify-content:space-between;align-items:center;padding:2px 4px 7px;touch-action:none;user-select:none;}
+#sol-mini-handle span{font-size:10px;font-weight:800;letter-spacing:.13em;color:var(--sol-accent);}
+#sol-mini-handle button{padding:3px 7px;font-size:12px;}
+#sol-mini .sol-mini-content{display:flex;align-items:center;gap:11px;min-width:0;}
+#sol-mini-art{height:54px;width:54px;object-fit:cover;border-radius:10px;flex-shrink:0;}
+#sol-mini .sol-mini-content > div{min-width:0;}
+#sol-mini-title,#sol-mini-artist{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#sol-mini-title{font-size:13px;}#sol-mini-artist{font-size:11px;opacity:.7;}
+#sol-mini .sol-mini-controls{display:flex;gap:9px;justify-content:center;margin-top:9px;}
+#sol-mini .sol-mini-controls button{font-size:14px;min-width:44px;}
+#sol-mini-play{background:var(--sol-accent)!important;color:#061219!important;}
+#sol-mini .sol-mini-progress input{width:100%;accent-color:var(--sol-accent);height:12px;}
+@media(max-width:880px){#sol-body .sol-grid{grid-template-columns:1fr;}
+  .sol-immersive-center{grid-template-columns:1fr;gap:0;overflow:auto;padding:5px 0 10px;}
+  .sol-vinyl-area{min-height:180px;}#sol-vinyl{width:min(43vw,245px);min-width:165px;}
+  .sol-immersive-details{text-align:center;}#sol-immersive-lines{max-height:22vh;}
+  #sol-immersive > .sol-immersive-top{padding:20px 12px 12px;min-height:136px;}
+  #sol-immersive > .sol-immersive-top > .sol-actions{right:12px;max-width:calc(100% - 24px);}
+  .sol-immersive-controls{gap:8px;padding-bottom:12px;}
+  .Root__now-playing-bar{margin:3px 5px 5px!important;}
+  #sol-launcher{right:8px;bottom:108px;padding:9px;}}
+@media(max-width:520px){#sol-overlay{padding:5px;}#sol-shell{max-height:98vh;border-radius:15px;}
+  #sol-tabs{padding:9px;gap:3px;}#sol-tabs button{padding:7px;font-size:11px;}
+  #sol-body{padding:0 10px 12px;}#sol-shell .sol-header{padding:10px 12px;}
+  #sol-body label.sol-control{grid-template-columns:100px 1fr 24px;gap:6px;}
+  #sol-immersive-title{font-size:25px;}#sol-mini{right:5px;bottom:100px;}}
+/* Small windows: let the buttons wrap within their own row, never under titlebar controls. */
+@media(max-width:400px){
+  #sol-immersive > .sol-immersive-top{display:flex;flex-direction:column;min-height:0;gap:8px;padding:18px 12px 12px;}
+  #sol-immersive > .sol-immersive-top > .sol-actions{position:static;margin:47px 0 0;max-width:100%;width:100%;justify-content:flex-start;}
+  #sol-immersive:fullscreen > .sol-immersive-top > .sol-actions{margin-top:8px;}
+}
+@media(prefers-reduced-motion:reduce){#sol-art-stage .sol-art-frame,#sol-immersive .sol-immersive-bg,#sol-vinyl,#sol-ambient-bars i{animation:none!important;transition:none!important;}
+  *,*:before,*:after{scroll-behavior:auto!important;}}
+:root.sol-reduced-motion #sol-art-stage .sol-art-frame,
+:root.sol-reduced-motion #sol-immersive .sol-immersive-bg,
+:root.sol-reduced-motion #sol-vinyl,
+:root.sol-reduced-motion #sol-ambient-bars i{animation:none!important;transition:none!important;}
+
+/* v3.1: transparent Spotify global search/header surfaces, excluding popup menus and text inputs. */
+.Root__globalNav,.Root__top-container,.main-globalNav-globalNav,
+[class*="main-globalNav-globalNav"],[class*="main-globalNav-container"],
+[class*="main-topBar-topbar"],[class*="main-topBar-background"],
+[class*="main-topBar-header"],[class*="main-globalNav-searchSection"] {
+  background:rgba(var(--sol-panel-rgb),.10)!important;background-image:none!important;
+  backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
+}
+.Root__globalNav [class*="main-globalNav-searchInputContainer"],
+.Root__globalNav [class*="main-globalNav-searchContainer"],
+.Root__globalNav [data-testid="search-input"],
+.Root__globalNav [role="search"],
+.Root__globalNav input[type="search"],
+.Root__top-container [role="search"] {
+  background:rgba(var(--sol-panel-rgb),.16)!important;
+  background-image:none!important;
+  backdrop-filter:blur(var(--sol-blur))!important;
+  border-color:rgba(var(--sol-rgb),.24)!important;
+}
+.Root__globalNav input:focus,.Root__globalNav input:focus-visible {outline-color:var(--sol-accent)!important;}
+.Root__main-view [class*="main-view-container__scroll-node"],
+.Root__main-view [data-testid="playlist-page"],
+.Root__main-view [data-testid="artist-page"] {background-color:transparent!important;background-image:none!important;}
+/* Always discoverable controls; the spinning record is inside Immersive Mode. */
+#sol-quick-actions {position:fixed;z-index:9996;bottom:115px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;justify-content:center;gap:6px;padding:6px;
+  border:1px solid rgba(var(--sol-rgb),.36);border-radius:100px;
+  background:rgba(var(--sol-panel-rgb),.82);backdrop-filter:blur(20px) saturate(160%);
+  box-shadow:0 9px 34px #0008,0 0 16px rgba(var(--sol-rgb),.2);}
+#sol-quick-actions button{font:700 12px 'Segoe UI',sans-serif;color:#f9fdff;
+  background:rgba(var(--sol-rgb),.14);border:1px solid rgba(var(--sol-rgb),.18);
+  border-radius:100px;cursor:pointer;padding:8px 15px;white-space:nowrap;}
+#sol-quick-actions button:hover,#sol-quick-actions button:focus-visible {
+  background:rgba(var(--sol-rgb),.36);outline:1px solid var(--sol-accent);}
+#sol-quick-actions #sol-quick-immersive{background:var(--sol-accent);color:#061018;}
+#sol-live-panel {position:fixed;z-index:9999;bottom:168px;right:20px;
+  box-sizing:border-box;width:min(370px,calc(100vw - 30px));height:min(440px,65vh);
+  background:rgba(var(--sol-panel-rgb),.91);backdrop-filter:blur(24px);
+  color:#f9fdff;border:1px solid rgba(var(--sol-rgb),.42);border-radius:20px;
+  padding:15px;box-shadow:0 20px 65px #000c,0 0 27px rgba(var(--sol-rgb),.22);
+  display:flex;flex-direction:column;}
+#sol-live-panel[hidden]{display:none!important;}
+#sol-live-panel header{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--sol-accent);}
+#sol-live-panel header button{cursor:pointer;background:rgba(var(--sol-rgb),.18);border:1px solid rgba(var(--sol-rgb),.29);
+  border-radius:8px;color:#fff;padding:5px 10px;margin-left:5px;}
+#sol-live-panel #sol-live-lines{flex:1;max-height:none;min-height:0;}
+#sol-live-panel small{color:#b9ced4;font-size:11px;margin-top:8px;}
+@media(max-width:850px){#sol-quick-actions{left:14px;transform:none;bottom:108px;}
+  #sol-quick-actions button{font-size:11px;padding:7px 9px;}
+  #sol-live-panel{bottom:161px;right:10px;}}
+
+/* 3.1 immersive lock: the stage NEVER follows lyrics; only its dedicated lyric viewport scrolls. */
+#sol-immersive{
+  height:100vh;height:100dvh;max-height:100dvh;
+  overflow:hidden!important;overscroll-behavior:contain;
+}
+#sol-immersive .sol-immersive-top,
+#sol-immersive .sol-immersive-controls{flex:0 0 auto;}
+#sol-immersive .sol-immersive-center{
+  flex:1 1 auto;min-height:0;max-height:100%;overflow:hidden!important;
+}
+#sol-immersive .sol-immersive-details{
+  display:flex;flex-direction:column;justify-content:center;
+  min-height:0;max-height:100%;overflow:hidden;
+}
+#sol-immersive #sol-immersive-lines{
+  box-sizing:border-box;display:block;flex:0 1 auto;
+  height:min(36vh,420px);min-height:0;max-height:min(36vh,420px);
+  overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior:contain;scrollbar-gutter:stable;
+}
+@media(max-width:880px){
+  #sol-immersive .sol-immersive-center{overflow:hidden!important;padding:0!important;}
+  #sol-immersive .sol-immersive-details{overflow:hidden!important;}
+  #sol-immersive #sol-immersive-lines{height:22vh;max-height:22vh;}
+}
+
+/* Compact quick controls, no selectable color schemes; artwork supplies every accent. */
+@media(max-width:510px){
+  #sol-quick-actions{max-width:calc(100vw - 20px);flex-wrap:wrap;border-radius:18px;}
+}
+/* Keep the floating player clear of the Studio launcher and quick controls. */
+#sol-mini{bottom:190px;}
+
+
+/* v3.1.2: All glass sliders apply to actual Spotify surfaces, not just the Studio. */
+:root {
+  --sol-live-surface:rgba(var(--sol-panel-rgb),var(--sol-glass-alpha));
+  --sol-live-elevated:rgba(var(--sol-panel-rgb),clamp(.06,calc(var(--sol-glass-alpha) + .13),.94));
+  --sol-live-glow:0 0 32px rgba(var(--sol-rgb),calc(var(--sol-glow-strength) * .75));
+}
+.Root__nav-bar,.Root__right-sidebar,.main-yourLibraryX-libraryContainer,
+.main-nowPlayingView-nowPlayingView,.main-nowPlayingView-nowPlayingWidgets,
+[class*="main-yourLibraryX-entryPoints"],[class*="main-nowPlayingView-nowPlayingWidget"] {
+  background:var(--sol-live-surface)!important;
+  backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
+  box-shadow:0 12px 24px #0003,var(--sol-live-glow)!important;
+}
+.Root__now-playing-bar {
+  background:var(--sol-live-elevated)!important;
+  backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
+  box-shadow:0 15px 30px #0006,var(--sol-live-glow)!important;
+}
+.Root__globalNav,.Root__top-container,.main-globalNav-globalNav,
+[class*="main-globalNav-globalNav"],[class*="main-globalNav-container"],
+[class*="main-topBar-topbar"],[class*="main-topBar-background"],
+[class*="main-topBar-header"],[class*="main-globalNav-searchSection"] {
+  background:var(--sol-live-surface)!important;
+  backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
+}
+.Root__main-view {background:rgba(var(--sol-panel-rgb),calc(var(--sol-glass-alpha) * .52))!important;}
+.main-card-card,.main-yourLibraryX-listItem,[class*="main-shelf-Shelf"] {
+  border-radius:var(--sol-radius)!important;
+  box-shadow:0 0 18px rgba(var(--sol-rgb),calc(var(--sol-glow-strength) * .25));
+}
+#sol-sidebar-lyrics {background:var(--sol-live-elevated);backdrop-filter:blur(var(--sol-blur));
+  box-shadow:0 8px 22px #0004,var(--sol-live-glow);}
+/* The Studio sits below Spotify's native app/titlebar buttons. */
+#sol-overlay {inset:44px 0 0!important;padding:16px 20px 20px!important;z-index:2147483000;}
+#sol-shell {max-height:min(90vh,calc(100dvh - 84px));}
+#sol-shell .sol-header {justify-content:flex-start;gap:16px;}
+#sol-close {flex:none;align-self:center;padding:10px 14px!important;
+  background:rgba(var(--sol-rgb),.20)!important;border:1px solid rgba(var(--sol-rgb),.65)!important;
+  color:white!important;font-weight:800!important;white-space:nowrap;}
+#sol-close:focus-visible {outline:3px solid var(--sol-accent);outline-offset:3px;}
+/* The immersive stage fills Spotify, and the native fullscreen layer if permitted. */
+#sol-immersive {z-index:2147482998;width:100vw!important;height:100dvh!important;}
+#sol-immersive:fullscreen {inset:0;width:100%!important;height:100%!important;max-height:none!important;}
+#sol-fullscreen-status {position:relative;z-index:2;margin:0 20px;padding:8px 12px;
+  border:1px solid rgba(var(--sol-rgb),.6);border-radius:10px;
+  background:rgba(7,18,28,.9);color:#fff;font-size:13px;}
+#sol-fullscreen-status[hidden] {display:none!important;}
+/* Preview exposes every setting while the Studio is covering the Spotify UI. */
+#sol-effects-demo {height:132px;margin:4px 0 18px;isolation:isolate;position:relative;overflow:hidden;
+  border-radius:var(--sol-radius);background:repeating-linear-gradient(35deg,#302045 0 16px,#22546e 16px 35px,#195c59 35px 52px);}
+#sol-effects-demo-art {position:absolute;inset:-14px;background-image:radial-gradient(circle at 24% 26%,#fa84be,transparent 40%),
+  radial-gradient(circle at 75% 78%,#2cbdc7,transparent 45%);
+  background-size:cover;background-position:center;filter:blur(var(--sol-art-blur));}
+#sol-effects-demo-glass {box-sizing:border-box;position:absolute;inset:14px 32px;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;gap:5px;color:#fff;
+  background:var(--sol-live-surface);border:1px solid rgba(var(--sol-rgb),.7);
+  border-radius:var(--sol-radius);backdrop-filter:blur(var(--sol-blur)) saturate(150%);
+  -webkit-backdrop-filter:blur(var(--sol-blur)) saturate(150%);
+  box-shadow:0 0 43px rgba(var(--sol-rgb),calc(var(--sol-glow-strength) * .95));}
+#sol-effects-demo-glass b {font-size:18px;text-shadow:0 1px 4px #000c;}
+#sol-effects-demo-glass small {font-size:12px;color:white;opacity:1;}
+@media(max-width:520px){#sol-overlay{inset:40px 0 0!important;padding:8px!important;}
+  #sol-shell{max-height:calc(100dvh - 55px);}#sol-shell .sol-header{gap:8px!important;}}
+
+
+/* 3.1.6 — Sidebar lyrics occupy a real slot in Spotify's content flow.
+   Do not let previous flex orders / positioning turn this into an overlay. */
+.Root__right-sidebar #sol-sidebar-lyrics {
+  box-sizing:border-box!important;
+  position:static!important;
+  inset:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  left:auto!important;
+  right:auto!important;
+  transform:none!important;
+  float:none!important;
+  clear:both!important;
+  order:initial!important;
+  grid-column:1 / -1!important;
+  grid-row:auto!important;
+  align-self:stretch!important;
+  flex:0 0 auto!important;
+  min-width:0!important;
+  width:calc(100% - 16px)!important;
+  min-height:170px!important;
+  max-height:260px!important;
+  height:auto!important;
+  margin:12px 8px 20px!important;
+  padding:12px 14px!important;
+  visibility:visible!important;
+  opacity:1!important;
+  overflow:hidden!important;
+  isolation:isolate;
+  z-index:auto!important;
+}
+.Root__right-sidebar #sol-side-lines {
+  min-height:80px!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  flex:1 1 auto;
+}
+
+/* 3.1.7 performance: pause decorative effects when not playing or when reduced motion is enabled. */
+:root.sol-paused #sol-art-stage .sol-art-frame,
+:root.sol-paused #sol-immersive .sol-immersive-bg,
+:root.sol-paused #sol-vinyl,
+:root.sol-paused #sol-ambient-bars i {animation-play-state:paused!important;}
+@media (prefers-reduced-motion:reduce) {
+  #sol-art-stage .sol-art-frame, #sol-immersive .sol-immersive-bg,
+  #sol-vinyl, #sol-ambient-bars i {animation:none!important;}
+}
