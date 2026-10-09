@@ -874,3 +874,125 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
   #sol-immersive .sol-deck #sol-tonearm{transition:none!important;}
 }
 :root.sol-reduced-motion #sol-immersive .sol-deck #sol-tonearm{transition:none!important;}
+
+
+/* Solstice 3.1.21: real articulated needle with a fixed bearing and
+   a moving S-curve tonearm. Earlier CSS-only arm parts are superseded.
+   The record is smaller, and the album cover is a true center label. */
+#sol-immersive .sol-deck{
+  --sol-platter-size:min(34vw,43vh,390px)!important;
+}
+#sol-immersive #sol-vinyl #sol-immersive-art{
+  width:25%!important;
+  height:25%!important;
+  border:3px solid #18242e!important;
+}
+#sol-immersive #sol-vinyl .sol-vinyl-label{
+  width:9px!important;
+  height:9px!important;
+}
+#sol-immersive .sol-deck #sol-tonearm,
+#sol-immersive .sol-deck #sol-tonearm.sol-needle-down {
+  box-sizing:border-box!important;
+  position:absolute!important;
+  display:block!important;
+  top:0!important;
+  right:-2%!important;
+  bottom:auto!important;
+  left:auto!important;
+  width:40%!important;
+  height:85%!important;
+  min-width:0!important;
+  min-height:0!important;
+  z-index:12!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  background-image:none!important;
+  color:inherit!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  transform:none!important;
+  transition:none!important;
+  filter:drop-shadow(3px 6px 4px #000b)!important;
+  cursor:pointer!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+#sol-immersive .sol-deck #sol-tonearm::before,
+#sol-immersive .sol-deck #sol-tonearm::after{
+  content:none!important;
+  display:none!important;
+}
+#sol-immersive #sol-tonearm .sol-tonearm-svg{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  overflow:visible!important;
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:none!important;
+  transform:none!important;
+}
+#sol-immersive #sol-tonearm .sol-tonearm-head {
+  transform-box:view-box;
+  transform-origin:135px 33px;
+  transform:rotate(-29deg);
+  transition:transform 770ms cubic-bezier(.2,.9,.2,1);
+}
+#sol-immersive #sol-tonearm.sol-needle-down .sol-tonearm-head{
+  transform:rotate(-3deg);
+}
+#sol-immersive #sol-tonearm .sol-tonearm-cartridge{
+  transform:translateY(-8px);
+  transition:transform 280ms cubic-bezier(.2,.9,.35,1) 0ms;
+}
+#sol-immersive #sol-tonearm.sol-needle-down .sol-tonearm-cartridge{
+  transform:translateY(0);
+  transition-delay:570ms;
+}
+#sol-immersive #sol-tonearm .sol-stylus-glow{
+  opacity:.1;
+  transition:opacity 200ms ease;
+}
+#sol-immersive #sol-tonearm.sol-needle-down .sol-stylus-glow{
+  opacity:1;
+  filter:drop-shadow(0 0 4px #79ffeb);
+  transition-delay:760ms;
+}
+#sol-immersive #sol-tonearm:focus-visible{
+  outline:3px solid var(--sol-accent)!important;
+  outline-offset:3px!important;
+  border-radius:12px!important;
+}
+/* Ensure the entire assembly stays proportional on laptops. */
+@media(max-width:880px){
+  #sol-immersive .sol-deck{
+    --sol-platter-size:min(46vw,34vh,245px)!important;
+  }
+  #sol-immersive .sol-deck #sol-tonearm{
+    right:-3%!important;
+    width:42%!important;
+  }
+}
+@media(max-width:490px){
+  #sol-immersive .sol-deck{
+    --sol-platter-size:min(60vw,33vh,225px)!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #sol-immersive #sol-tonearm .sol-tonearm-head,
+  #sol-immersive #sol-tonearm .sol-tonearm-cartridge,
+  #sol-immersive #sol-tonearm .sol-stylus-glow{
+    transition:none!important;
+  }
+}
+:root.sol-reduced-motion #sol-immersive #sol-tonearm .sol-tonearm-head,
+:root.sol-reduced-motion #sol-immersive #sol-tonearm .sol-tonearm-cartridge,
+:root.sol-reduced-motion #sol-immersive #sol-tonearm .sol-stylus-glow{
+  transition:none!important;
+}
