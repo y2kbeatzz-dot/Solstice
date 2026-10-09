@@ -1,0 +1,23 @@
+{
+  "name": "Solstice",
+  "description": "Dynamic album-art glass theme with immersive player, synchronized lyrics and performance-focused updates.",
+  "preview": "preview.svg",
+  "readme": "README.md",
+  "usercss": "user.css",
+  "schemes": "color.ini",
+  "include": [
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@main/theme.js"
+  ],
+  "authors": [
+    {
+      "name": "Crystal",
+      "url": "https://github.com/y2kbeatzz-dot"
+    }
+  ],
+  "tags": [
+    "dark",
+    "glass",
+    "dynamic",
+    "lyrics"
+  ]
+}
