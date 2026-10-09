@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.33';
+  const SOLSTICE_VERSION = '3.1.34';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -118,10 +118,10 @@
     root.style.setProperty('--sol-lyrics-font',font);
     for (const selector of ['#sol-side-lines','#sol-live-lines','#sol-immersive-lines','#sol-studio-lyrics','#sol-lyric-font-preview']) {
       const el = $(selector);
-      if (el) { el.style.setProperty('font-family',font,'important'); el.querySelectorAll('.sol-line,.sol-line-text,.sol-word').forEach(node=>node.style.setProperty('font-family','inherit','important')); }
+      if (el) { if(el.style.getPropertyValue('font-family') !== font) el.style.setProperty('font-family',font,'important'); }
     }
   }
-  const setPref = (name, value) => { prefs[name] = value; style(); if (name === 'lyricFont') syncLyricFonts(); };
+  const setPref = (name, value) => { prefs[name] = value; style(); };
   function notify(message) {
     if (!prefs.showPopups) return;
     $('#sol-toast')?.remove();
@@ -750,7 +750,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.29</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.34</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -770,12 +770,13 @@
   function saveLyricDraft() {
     clearTimeout(lyricDraftTimer);
     const editor=$('#sol-editor');
-    if (!editor || $('#sol-overlay')?.hidden || studioTab!=='lyrics') return;
+    if (!editor || studioTab!=='lyrics') return;
     const key=editor.dataset.trackKey;
     if (!key || editor.value === (savedLyrics[key] || '')) return;
+    const previous=savedLyrics[key];
     savedLyrics[key]=editor.value;
     try { localStorage.setItem(LYRICS,JSON.stringify(savedLyrics)); }
-    catch(e) { console.warn('[Solstice] Unable to persist lyrics',e); }
+    catch(e) { if(previous === undefined) delete savedLyrics[key]; else savedLyrics[key]=previous; console.warn('[Solstice] Unable to persist lyrics',e); return; }
     updateLyricUI();
   }
   function openStudio(tab = 'overview') { $('#sol-overlay').hidden=false; renderStudio(tab); }
@@ -789,7 +790,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.33 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.34 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -871,7 +872,7 @@
       $('#sol-save').onclick=()=>{clearTimeout(lyricDraftTimer);savedLyrics[lyricEditor.dataset.trackKey]=$('#sol-editor').value;try{localStorage.setItem(LYRICS,JSON.stringify(savedLyrics));}catch{}updateLyricUI();notify('Local lyrics saved');};
       $('#sol-clear').onclick=()=>{clearTimeout(lyricDraftTimer);delete savedLyrics[lyricEditor.dataset.trackKey];try{localStorage.setItem(LYRICS,JSON.stringify(savedLyrics));}catch{}$('#sol-editor').value='';updateLyricUI();};
       $('#sol-import').onclick=()=>$('#sol-lyricfile').click();
-      $('#sol-lyricfile').onchange=async e=>{const f=e.target.files?.[0];if (f && f.size < 1_000_000) $('#sol-editor').value=await f.text();};
+      $('#sol-lyricfile').onchange=async e=>{const f=e.target.files?.[0];if (f && f.size < 1_000_000) { lyricEditor.value=await f.text(); saveLyricDraft(); } e.target.value='';};
       syncLyricFonts();
       updateLyricUI();
       if (prefs.autoLyrics && !lyricCache.has(trackSignature(t)) && !savedLyrics[trackKey()]) queueLyrics();
@@ -1221,7 +1222,7 @@
     fetchAbort?.abort();
     lastLyricStatus='Looking for lyrics…';
     redrawArtwork();updateTrackDisplays();updatePalette(t);queueLyrics();
-    if(studioTab==='lyrics' && !$('#sol-overlay')?.hidden)renderStudio('lyrics');
+    if(studioTab==='lyrics' && !$('#sol-overlay')?.hidden) { saveLyricDraft(); renderStudio('lyrics'); }
   }
 
   // Explicit badge repair copied from the exact inline DevTools fix that
