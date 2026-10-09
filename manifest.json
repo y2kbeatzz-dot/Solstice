@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.37 — fixes updater version checks with GitHub API fallback and clearer errors; includes smoother word-sync karaoke and Lyrics Studio.",
+  "description": "Solstice 3.1.38 — optimized word-by-word lyrics for lower lag: updates only the active word in the foreground lyric pane. Keeps synced lyrics, font effects, settings and immersive vinyl.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
-  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@72d1f643f6e44de1bcf029e78f1332167633681c/user.css",
+  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@08647b14f45488d014613420e1306d1e6db03466/user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@72d1f643f6e44de1bcf029e78f1332167633681c/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@08647b14f45488d014613420e1306d1e6db03466/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.37"
+  "version": "3.1.38"
 }
