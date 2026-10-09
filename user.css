@@ -597,3 +597,91 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 }
 /* Remove all old false-positive label rules; they styled the container only. */
 
+
+/* Solstice 3.1.19 — tactile turntable. Existing artwork/vinyl styling remains. */
+#sol-immersive .sol-vinyl-area{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+}
+#sol-immersive .sol-deck{
+  position:relative;display:grid;place-items:center;flex-shrink:0;
+  isolation:isolate;
+}
+#sol-immersive #sol-vinyl{
+  touch-action:none;cursor:grab;user-select:none;
+  -webkit-user-select:none;outline-offset:8px;
+}
+#sol-immersive #sol-vinyl.sol-vinyl-grabbed{cursor:grabbing;}
+#sol-immersive #sol-vinyl.sol-scratching{
+  animation:none!important;
+  animation-play-state:paused!important;
+  transform:rotate(var(--sol-scratch-angle,0deg))!important;
+  box-shadow:0 22px 65px #000c,0 0 90px rgba(var(--sol-rgb),.60)!important;
+}
+#sol-immersive #sol-vinyl:focus-visible{
+  outline:3px solid var(--sol-accent);
+}
+#sol-immersive #sol-vinyl-hint{
+  color:#d4ecef;opacity:.87;text-align:center;font-size:12px;line-height:1.35;
+  min-height:18px;letter-spacing:.02em;user-select:none;
+}
+#sol-immersive .sol-deck-transport{
+  display:flex;gap:12px;align-items:center;justify-content:center;
+}
+#sol-immersive .sol-deck-transport button{
+  min-width:92px;padding:8px 15px;border-radius:99px;
+  border:1px solid rgba(var(--sol-rgb),.46);
+  background:rgba(var(--sol-panel-rgb),.65);color:#e8fcf9;
+  font:700 13px 'Segoe UI Variable','Segoe UI',sans-serif;
+}
+#sol-immersive .sol-deck-transport button:hover{
+  color:var(--sol-accent);box-shadow:0 0 18px rgba(var(--sol-rgb),.24);
+}
+/* Click the record-player tonearm to play/pause (raise/drop the needle).
+   Pivot is separate from the rotating record. */
+#sol-immersive #sol-tonearm {
+  box-sizing:border-box;position:absolute;z-index:5;
+  top:-5%;right:-15%;height:64%;width:31%;
+  padding:0!important;margin:0!important;
+  border:0!important;background:transparent!important;
+  box-shadow:none!important;cursor:pointer;
+  transform-origin:78% 10%;transform:rotate(-33deg);
+  transition:transform .42s cubic-bezier(.22,.8,.26,1),filter .25s ease;
+  filter:drop-shadow(0 3px 5px #0008);
+}
+#sol-immersive #sol-tonearm.sol-needle-down{transform:rotate(-7deg);}
+#sol-immersive #sol-tonearm:focus-visible{
+  outline:2px solid var(--sol-accent);outline-offset:3px;
+}
+#sol-immersive #sol-tonearm:before {
+  content:"";position:absolute;top:4%;left:66%;
+  width:23px;height:23px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#f0ffff,#6b7e92 58%,#1b2b37);
+  border:3px solid #223644;box-shadow:0 2px 9px #0008;
+}
+#sol-immersive #sol-tonearm .sol-arm-shaft {
+  position:absolute;top:17%;left:72%;width:9px;height:65%;border-radius:15px;
+  background:linear-gradient(90deg,#2c3944,#c6d9e0 36%,#e8f8f4 66%,#425867);
+  border:1px solid #d2eaef70;
+  transform:rotate(13deg);transform-origin:top center;
+  box-shadow:2px 2px 7px #0008;
+}
+#sol-immersive #sol-tonearm .sol-arm-needle{
+  position:absolute;top:74%;left:59%;width:24px;height:27px;border-radius:3px 3px 8px 8px;
+  transform:rotate(13deg);
+  background:linear-gradient(145deg,#b8d6df,#4f6576 45%,#182b3c);
+  border:1px solid #d9eff381;
+}
+#sol-immersive #sol-tonearm .sol-arm-needle:after{
+  content:"";position:absolute;left:10px;bottom:-11px;width:3px;height:12px;
+  border-radius:0 0 3px 3px;background:var(--sol-accent);
+  box-shadow:0 0 8px rgba(var(--sol-rgb),.6);
+}
+@media(max-width:880px){
+  #sol-immersive .sol-vinyl-area{min-height:0;gap:6px;}
+  #sol-immersive #sol-vinyl-hint{font-size:10px;}
+  #sol-immersive .sol-deck-transport button{min-width:75px;padding:6px 11px;font-size:11px;}
+}
+@media(prefers-reduced-motion:reduce){
+  #sol-immersive #sol-tonearm{transition:none;}
+}
+:root.sol-reduced-motion #sol-immersive #sol-tonearm{transition:none;}
