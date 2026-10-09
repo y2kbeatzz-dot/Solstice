@@ -1,10 +1,10 @@
-/* Solstice 3.1.20 — Confirmed explicit badge repair and Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
+/* Solstice 3.1.21 — Confirmed explicit badge repair and Studio updater and settings backup with no feature removal. All existing Studio, immersive, animation and lyric features preserved. */
 (() => {
   'use strict';
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.20';
+  const SOLSTICE_VERSION = '3.1.21';
   const KEY = 'solstice-v3-prefs';
   const OLD_KEY = 'solstice-v2-prefs';
   const LYRICS = 'solstice-v2-lyrics'; // Retain all locally saved v2.x lyrics.
@@ -588,7 +588,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.20</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.21</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -614,7 +614,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.20 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.21 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -807,7 +807,42 @@
     const el = make(`<section id="sol-immersive" hidden aria-label="Solstice Immersive Mode">
       <div class="sol-immersive-bg"></div><div class="sol-immersive-shade"></div>
       <header class="sol-immersive-top"><strong>☀ SOLSTICE <span>IMMERSIVE</span></strong><div class="sol-actions"><button id="sol-immersive-fullscreen" type="button" aria-label="Toggle system fullscreen">⛶ Fullscreen</button><button id="sol-immersive-exit" type="button" aria-label="Close immersive mode">✕ Close</button></div></header><p id="sol-fullscreen-status" role="status" hidden></p>
-      <div class="sol-immersive-center"><div class="sol-vinyl-area"><div class="sol-deck"><div id="sol-vinyl" role="slider" tabindex="0" aria-label="Rotate the record to rewind or fast-forward" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="0" aria-valuetext="0:00"><img id="sol-immersive-art" alt="Current album artwork"><div class="sol-vinyl-label"></div></div><button id="sol-tonearm" type="button" aria-label="Lift or drop the needle to pause or play" aria-pressed="false" title="Needle: play or pause"><span class="sol-arm-shaft"></span><span class="sol-arm-needle"></span></button></div><div id="sol-vinyl-hint" aria-live="off">↶ Drag record to rewind or fast-forward ↷</div><div class="sol-deck-transport"><button id="sol-rewind-10" type="button" aria-label="Rewind 10 seconds">↶ 10s</button><button id="sol-forward-10" type="button" aria-label="Forward 10 seconds">10s ↷</button></div><div id="sol-ambient-bars" aria-label="Ambient playback animation"></div></div>
+      <div class="sol-immersive-center"><div class="sol-vinyl-area"><div class="sol-deck"><div id="sol-vinyl" role="slider" tabindex="0" aria-label="Rotate the record to rewind or fast-forward" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="0" aria-valuetext="0:00"><img id="sol-immersive-art" alt="Current album artwork"><div class="sol-vinyl-label"></div></div><button id="sol-tonearm" type="button" aria-label="Lift or drop the needle to pause or play" aria-pressed="false" title="Lift or drop the stylus · play/pause">
+<svg class="sol-tonearm-svg" viewBox="0 0 180 320" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
+<defs>
+ <linearGradient id="sol-tonearm-metal" x1="0" x2="1"><stop offset="0" stop-color="#263c4d"/><stop offset=".25" stop-color="#9dc2cb"/><stop offset=".48" stop-color="#f2fcff"/><stop offset=".68" stop-color="#a7c2c9"/><stop offset="1" stop-color="#32485a"/></linearGradient>
+ <linearGradient id="sol-tonearm-black" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#64798a"/><stop offset=".35" stop-color="#293b48"/><stop offset="1" stop-color="#09121a"/></linearGradient>
+ <radialGradient id="sol-tonearm-bearing"><stop stop-color="#d5f4ee"/><stop offset=".48" stop-color="#566e7e"/><stop offset="1" stop-color="#0a131c"/></radialGradient>
+</defs>
+<!-- Stationary bearing and weighted pivot on the turntable plinth. -->
+<ellipse cx="135" cy="35" rx="34" ry="21" fill="#02070d" opacity=".8"/>
+<circle cx="135" cy="33" r="27" fill="#0b1620" stroke="#7695a1" stroke-width="3"/>
+<circle cx="135" cy="33" r="22" fill="url(#sol-tonearm-bearing)" stroke="#182b39" stroke-width="4"/>
+<circle cx="135" cy="33" r="11" fill="#1d3441" stroke="#d3eced" stroke-width="2"/>
+<circle cx="135" cy="33" r="4.5" fill="#aeeadd"/>
+<path d="M 114 53 H 156" stroke="#192935" stroke-width="10" stroke-linecap="round"/>
+<path d="M 115 51 H 155" stroke="#7e9c9d" stroke-width="3" stroke-linecap="round"/>
+<!-- Counterweight, S-shaped steel tonearm and cartridge. -->
+<g class="sol-tonearm-head">
+ <rect x="113" y="12" width="44" height="22" rx="9" fill="url(#sol-tonearm-black)" stroke="#abc8d0" stroke-width="1.5"/>
+ <path d="M 120 14 V 31 M 124 13 V 32 M 129 13 V 32 M 134 13 V 32 M 139 13 V 32 M 144 14 V 31 M 149 14 V 31" stroke="#cedfe6" opacity=".22"/>
+ <rect x="108" y="31" width="10" height="34" rx="4" fill="url(#sol-tonearm-metal)"/>
+ <path d="M 113 54 C 116 91 143 139 121 182 C 109 209 85 222 64 239" fill="none" stroke="#03121c" stroke-width="15" stroke-linecap="round"/>
+ <path d="M 113 54 C 116 91 143 139 121 182 C 109 209 85 222 64 239" fill="none" stroke="url(#sol-tonearm-metal)" stroke-width="12" stroke-linecap="round"/>
+ <path d="M 109 55 C 111 94 134 139 116 178 C 103 205 82 218 61 236" fill="none" stroke="#e8fcff" stroke-width="2" stroke-linecap="round" opacity=".67"/>
+ <rect x="100" y="64" width="28" height="10" rx="5" fill="#122b37" stroke="#9ce2d9" stroke-width="1"/>
+ <path d="M 105 69 H 123" stroke="#94f1df" stroke-width="2" stroke-linecap="round"/>
+ <g class="sol-tonearm-cartridge">
+  <path d="M 49 229 L 83 232 L 83 250 L 42 247 Z" fill="url(#sol-tonearm-black)" stroke="#a9ccd5" stroke-width="2"/>
+  <rect x="49" y="235" width="7" height="3" rx="1.5" fill="#def1f3"/>
+  <rect x="62" y="236" width="7" height="3" rx="1.5" fill="#def1f3"/>
+  <path d="M 44 247 H 79 L 73 261 H 46 Z" fill="#102630" stroke="#809eae" stroke-width="1.8"/>
+  <path d="M 52 254 H 65" stroke="#9ef8df" stroke-width="2.2"/>
+  <path class="sol-stylus-tip" d="M 53 259 L 51 280 L 48 284" fill="none" stroke="#d7f8fa" stroke-width="2.4" stroke-linecap="round"/>
+  <circle class="sol-stylus-glow" cx="48" cy="283" r="3.4" fill="#80ffe4"/>
+ </g>
+</g>
+</svg></button></div><div id="sol-vinyl-hint" aria-live="off">↶ Drag record to rewind or fast-forward ↷</div><div class="sol-deck-transport"><button id="sol-rewind-10" type="button" aria-label="Rewind 10 seconds">↶ 10s</button><button id="sol-forward-10" type="button" aria-label="Forward 10 seconds">10s ↷</button></div><div id="sol-ambient-bars" aria-label="Ambient playback animation"></div></div>
       <div class="sol-immersive-details"><div class="sol-pill">NOW PLAYING</div><h1 id="sol-immersive-title">Nothing playing</h1><p id="sol-immersive-artist">Start a song</p><div id="sol-immersive-lines" class="sol-lyrics-scroll"></div></div></div>
       <footer class="sol-immersive-controls"><button id="sol-immersive-back" aria-label="Previous track" type="button">⏮</button><button id="sol-immersive-play" aria-label="Play or pause" type="button">▶</button><button id="sol-immersive-next" aria-label="Next track" type="button">⏭</button><span id="sol-immersive-position">0:00</span><input id="sol-immersive-seek" aria-label="Seek position" type="range" min="0" max="1000" value="0"><span id="sol-immersive-length">0:00</span></footer></section>`);
     document.body.append(el);
@@ -853,7 +888,7 @@
     const el=$('#sol-immersive');if(!el)return;
     el.hidden=false;
     showFullscreenStatus('');syncFullscreenState();
-    updateTrackDisplays();updateLyricUI();
+    updateTrackDisplays();updateLyricUI();tickPlayback();
   }
   function closeImmersive() {
     if(vinylScrub)finishVinylScrub();
@@ -914,7 +949,7 @@
     root.classList.toggle('sol-paused',paused);
     const posMs=vinylScrub?.targetMs ?? progress(),seekMax=duration(),ratio=seekMax?clamp(posMs/seekMax,0,1,0):0;
     const needle=$('#sol-tonearm');
-    if(needle){needle.classList.toggle('sol-needle-down',!paused);needle.setAttribute('aria-pressed',String(!paused));}
+    if(needle){needle.classList.toggle('sol-needle-down',!paused);needle.setAttribute('aria-pressed',String(!paused));needle.setAttribute('aria-label',paused?'Drop the needle to play':'Lift the needle to pause');}
     const vinyl=$('#sol-vinyl');
     if(vinyl&&!vinylScrub){vinyl.setAttribute('aria-valuenow',String(Math.round(ratio*1000)));vinyl.setAttribute('aria-valuetext',fmt(posMs));}
     for(const selector of ['#sol-mini-seek','#sol-immersive-seek']){
