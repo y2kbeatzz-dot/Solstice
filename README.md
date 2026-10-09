@@ -6,6 +6,8 @@
 
 **🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
 
+**⭐ [Please star this repository to help support Solstice!](https://github.com/y2kbeatzz-dot/Solstice)**
+
 ![Solstice preview](preview.svg)
 
 ## Features
