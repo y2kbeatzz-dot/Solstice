@@ -886,7 +886,7 @@
       const onChange=()=>{setPref(el.dataset.range,Number(el.value));const output=el.closest('label')?.querySelector('output');if(output)output.textContent=el.value;};
       el.addEventListener('input',onChange);el.addEventListener('change',onChange);
     });
-    $('[data-switch]',body).forEach(el=>el.onchange=()=>{setPref(el.dataset.switch,el.checked);if(el.dataset.switch==='autoLyrics'&&el.checked)queueLyrics();if(el.dataset.switch==='wordSync'){if(el.checked)void lookupWordLyrics();updateLyricUI();}});
+    $$('[data-switch]',body).forEach(el=>el.onchange=()=>{setPref(el.dataset.switch,el.checked);if(el.dataset.switch==='autoLyrics'&&el.checked)queueLyrics();if(el.dataset.switch==='wordSync'){if(el.checked)void lookupWordLyrics();updateLyricUI();}});
     $$('[data-select]',body).forEach(el=>el.onchange=()=>setPref(el.dataset.select,el.value));
   }
   function $$(selector, ctx=document) { return [...ctx.querySelectorAll(selector)]; }
