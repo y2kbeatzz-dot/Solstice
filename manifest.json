@@ -3,7 +3,7 @@
   "description": "Solstice 3.1.42 — smoother word-by-word lyrics with drift-corrected playback timing, less frame work, and saved performance toggles.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
-  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@dcc2981f79fe235e4597dc18bcbda285a51c49f3/user.css",
+  "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
     "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@dcc2981f79fe235e4597dc18bcbda285a51c49f3/theme.js"
