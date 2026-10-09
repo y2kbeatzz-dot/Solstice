@@ -1511,3 +1511,11 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 :root:not(.sol-dynamic-lyrics) .sol-lyrics-scroll .sol-line .sol-word{
   background:none!important;-webkit-text-fill-color:currentColor!important;
 }
+
+/* Solstice 3.1.30 — font selection applies to all lyrics, not only parent panes. */
+#sol-immersive #sol-immersive-lines, #sol-immersive #sol-immersive-lines .sol-line, #sol-immersive #sol-immersive-lines .sol-line-text, #sol-immersive #sol-immersive-lines .sol-word,
+#sol-sidebar-lyrics #sol-side-lines, #sol-sidebar-lyrics #sol-side-lines .sol-line, #sol-sidebar-lyrics #sol-side-lines .sol-line-text, #sol-sidebar-lyrics #sol-side-lines .sol-word,
+#sol-live-panel #sol-live-lines, #sol-live-panel #sol-live-lines .sol-line, #sol-live-panel #sol-live-lines .sol-line-text, #sol-live-panel #sol-live-lines .sol-word,
+#sol-studio-lyrics, #sol-studio-lyrics .sol-line, #sol-studio-lyrics .sol-line-text, #sol-studio-lyrics .sol-word, #sol-lyric-font-preview{font-family:var(--sol-lyrics-font,'Segoe UI',sans-serif)!important;}
+#sol-art-stage .sol-art-frame{will-change:opacity;}
+:root.sol-motion-off #sol-art-stage .sol-art-frame,:root.sol-paused #sol-art-stage .sol-art-frame{will-change:auto;}
