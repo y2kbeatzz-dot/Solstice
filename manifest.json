@@ -1,6 +1,6 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.24 restores vinyl auto-spin when Marketplace CSS is unavailable, with smooth mouse scrub resume, realistic animated needle, 34% center cover, synchronized lyrics and Studio.",
+  "description": "Solstice 3.1.24 restores a realistic 33⅓ RPM vinyl motor, keeping the record spinning with self-contained fallback CSS even if Marketplace has stale styles. Includes animated needle, album label, lyrics and Studio.",
   "preview": "preview-v3.1.24.svg",
   "readme": "README.md",
   "usercss": "user.css",
