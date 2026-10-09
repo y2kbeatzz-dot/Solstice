@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.36';
+  const SOLSTICE_VERSION = '3.1.37';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -616,22 +616,28 @@
     const watchdog=setTimeout(()=>controller.abort(),10000);
     try {
       const endpoints=[
-        'https://raw.githubusercontent.com/y2kbeatzz-dot/Solstice/main/manifest.json?check='+Date.now(),
-        'https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@main/manifest.json?check='+Date.now()
+        'https://api.github.com/repos/y2kbeatzz-dot/Solstice/contents/manifest.json?nocache='+Date.now(),
+        'https://raw.githubusercontent.com/y2kbeatzz-dot/Solstice/main/manifest.json?nocache='+Date.now(),
+        'https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@main/manifest.json?nocache='+Date.now()
       ];
-      let manifest=null;
+      let manifest=null, lastError=null;
       for(const endpoint of endpoints){
         try{
-          const response=await fetch(endpoint,{cache:'no-store',signal:controller.signal});
+          const response=await fetch(endpoint,{cache:'no-store',signal:controller.signal,headers:{'Accept':'application/vnd.github+json'}});
           if(!response.ok)throw new Error('HTTP '+response.status);
-          manifest=await response.json();
-          break;
-        }catch(e){if(controller.signal.aborted)throw e;}
+          const body=await response.json();
+          if(body.content && body.encoding==='base64') {
+            const raw=atob(body.content.replace(/\\s/g,''));
+            manifest=JSON.parse(raw);
+          } else manifest=body;
+          if(manifest?.version)break;
+          manifest=null;
+        }catch(e){lastError=e;if(controller.signal.aborted)break;}
       }
-      if(!manifest)throw new Error('The release servers could not be reached.');
-      const match=String(manifest.description||'').match(/Solstice\s+v?(\d+\.\d+\.\d+)/i);
-      const release=typeof manifest.version==='string'&&/^\d+\.\d+\.\d+$/.test(manifest.version)?manifest.version:match?.[1];
-      if(!release)throw new Error('Version unavailable in public manifest');
+      if(!manifest)throw lastError || new Error('Unable to read the release manifest');
+      const match=String(manifest.description||'').match(/Solstice\\s+v?(\\d+\\.\\d+\\.\\d+)/i);
+      const release=typeof manifest.version==='string'&&/^\\d+\\.\\d+\\.\\d+$/.test(manifest.version)?manifest.version:match?.[1];
+      if(!release)throw new Error('Release version missing from manifest');
       updateState.latest=release;
       updateState.checkedAt=Date.now();
       const difference=versionCompare(updateState.latest,SOLSTICE_VERSION);
@@ -640,7 +646,7 @@
         difference===0?'You are using the latest public Solstice version. Your settings and lyrics are preserved across theme updates.':
         'Your installed Solstice version is newer than the published manifest.';
     }catch(e){
-      updateState.message='Could not check GitHub right now. You can still open Marketplace → Installed to look for updates.';
+      updateState.message='Update check failed: '+String(e?.message || 'network error')+'. Try Marketplace → Installed → Solstice. This tool checks versions but Marketplace installs updates.';
     }finally{
       clearTimeout(watchdog);
       updateState.checking=false;
@@ -749,7 +755,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.36</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.37</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -789,7 +795,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.36 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.37 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
