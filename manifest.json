@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.41 — independent word-by-word karaoke engine with saved enable, smooth timing, and low-power toggles in Lyrics Studio.",
+  "description": "Solstice 3.1.42 — smoother word-by-word lyrics with drift-corrected playback timing, less frame work, and saved performance toggles.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
-  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@39a06dc449a004dee767efdd65844f16ee5eef8d/user.css",
+  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@dcc2981f79fe235e4597dc18bcbda285a51c49f3/user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@39a06dc449a004dee767efdd65844f16ee5eef8d/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@dcc2981f79fe235e4597dc18bcbda285a51c49f3/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.41"
+  "version": "3.1.42"
 }
