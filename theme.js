@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.44';
+  const SOLSTICE_VERSION = '3.1.45';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -405,7 +405,7 @@
           if(wordIndex>=0 && spans[wordIndex]){
             const word=tokens[wordIndex];
             const end=tokens[wordIndex+1]?.t ?? lines[index+1]?.t ?? word.t+700;
-            const pct=Math.round(50*clamp((position-word.t)/Math.max(end-word.t,1),0,1,0))*2;
+            const pct=Math.round(25*clamp((position-word.t)/Math.max(end-word.t,1),0,1,0))*4;
             if(spans[wordIndex].dataset.fill!==String(pct)){
               spans[wordIndex].dataset.fill=String(pct);
               spans[wordIndex].style.setProperty('--sol-word-progress',pct+'%');
@@ -421,7 +421,7 @@
         if (current) {
           const start = lines[index].t;
           const end = lines[index + 1]?.t ?? Math.min(duration() || start + 5000, start + 5000);
-          const percent = Math.round(50 * clamp((position - start) / Math.max(end - start, 1), 0, 1, 0)) * 2;
+          const percent = Math.round(25 * clamp((position - start) / Math.max(end - start, 1), 0, 1, 0)) * 4;
           if (current.dataset.fill !== String(percent)) {
             current.dataset.fill = String(percent);
             current.style.setProperty('--sol-line-progress', percent + '%');
@@ -791,7 +791,7 @@
     $('#sol-quick-lyrics').onclick = toggleLiveLyrics;
     mountLiveLyrics();
     const studio = make(`<div id="sol-overlay" hidden><div id="sol-shell" role="dialog" aria-modal="true" aria-label="Solstice Studio">
-      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.44</small><h1>☀ Solstice Studio</h1></div></header>
+      <header class="sol-header"><button id="sol-close" type="button" aria-label="Close Studio">✕ Close</button><div><small>MADE BY CRYSTAL · SOLSTICE 3.1.45</small><h1>☀ Solstice Studio</h1></div></header>
       <nav id="sol-tabs" aria-label="Studio tabs"><button data-tab="overview">Overview</button><button data-tab="appearance">Appearance</button><button data-tab="experience">Experience</button><button data-tab="lyrics">Lyrics Studio</button><button data-tab="status">Diagnostics</button><button data-tab="updates">Updater</button></nav>
       <div id="sol-body"></div></div></div>`);
     document.body.append(studio);
@@ -831,7 +831,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.44 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.45 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -1258,7 +1258,8 @@
     const len=$('#sol-immersive-length');if(len){const next=fmt(seekMax);if(len.textContent!==next)len.textContent=next;}
     // Live SVG tonearm/record scrubbing remains responsive without doing
     // expensive lyric layout recalculations on a dragging record.
-    if(!vinylScrub && ($('#sol-sidebar-lyrics')?.isConnected || !$('#sol-live-panel')?.hidden || !$('#sol-immersive')?.hidden || (!$('#sol-overlay')?.hidden && studioTab==='lyrics')) && (!prefs.karaokeEngine || !cachedLRC(lyricText()).some(l=>l.words?.length)))updateLyricUI(posMs);
+    // Never let the coarse 1600ms status tick overwrite a frame-paced lyric fill.
+    if(!vinylScrub && (!prefs.karaokeEngine || !prefs.dynamicLyrics || !prefs.karaoke) && ($('#sol-sidebar-lyrics')?.isConnected || !$('#sol-live-panel')?.hidden || !$('#sol-immersive')?.hidden || (!$('#sol-overlay')?.hidden && studioTab==='lyrics')))updateLyricUI(posMs);
   }
   function onTrackChanged() {
     const t=track(), signature=trackSignature(t);
@@ -1378,7 +1379,7 @@
         sampledAt=now;
         lastClockTrack=nowTrack;lastClockPlaying=playing;
       }
-      const position=Math.max(0,sampledPosition+(playing && prefs.smoothWordSync?now-sampledAt:0)-Number(prefs.lyricSyncOffset||0));
+      const position=Math.max(0,sampledPosition+(playing && prefs.smoothWordSync?now-sampledAt:0)+Number(prefs.lyricSyncOffset||0));
       drawLyricBox(pane,variant,{data:karaokeData,lines:karaokeLines,
         fingerprint:karaokeFingerprint,position});
     }
