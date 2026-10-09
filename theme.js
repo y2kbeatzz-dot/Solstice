@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.32';
+  const SOLSTICE_VERSION = '3.1.33';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -115,9 +115,10 @@
   }
   function syncLyricFonts() {
     const font = LYRIC_FONTS[prefs.lyricFont] || LYRIC_FONTS.system;
+    root.style.setProperty('--sol-lyrics-font',font);
     for (const selector of ['#sol-side-lines','#sol-live-lines','#sol-immersive-lines','#sol-studio-lyrics','#sol-lyric-font-preview']) {
       const el = $(selector);
-      if (el && el.style.fontFamily !== font) el.style.fontFamily = font;
+      if (el) { el.style.setProperty('font-family',font,'important'); el.querySelectorAll('.sol-line,.sol-line-text,.sol-word').forEach(node=>node.style.setProperty('font-family','inherit','important')); }
     }
   }
   const setPref = (name, value) => { prefs[name] = value; style(); if (name === 'lyricFont') syncLyricFonts(); };
@@ -347,9 +348,7 @@
   // and even the outer Immersive screen when the active lyric changes.
   function centerLyricInBox(box, line) {
     if (!box || !line || box.clientHeight === 0) return;
-    const boxRect = box.getBoundingClientRect();
-    const lineRect = line.getBoundingClientRect();
-    const wanted = box.scrollTop + (lineRect.top + lineRect.height/2) - (boxRect.top + box.clientHeight/2);
+    const wanted = line.offsetTop - box.offsetTop - (box.clientHeight - line.offsetHeight)/2;
     const limit = Math.max(0, box.scrollHeight - box.clientHeight);
     const target = Math.max(0, Math.min(limit, wanted));
     if (Math.abs(box.scrollTop-target) < 2) return;
@@ -790,7 +789,7 @@
     $$('#sol-tabs button').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab === tab));
     const t=track();
     if (tab === 'overview') {
-      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.32 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
+      body.innerHTML = `<div class="sol-grid"><section class="sol-card sol-featured"><span class="sol-pill">SOLSTICE 3.1.33 · STUDIO UPDATER</span><h2>Music that fills the room.</h2><p>Animated artwork, synced lyrics, artwork-matched colors and a floating glass player.</p><div class="sol-actions"><button id="sol-open-immersive" class="sol-primary">✦ Open Immersive Mode</button></div></section><section class="sol-card"><span class="sol-pill">NOW PLAYING</span><h2>${esc(t.title)}</h2><p>${esc(t.artist)}</p><p>Animated artwork and karaoke are built into Immersive Mode.</p><div class="sol-actions"><button id="sol-open-live">Show live lyrics</button><button id="sol-open-lyrics">Edit lyrics</button><button id="sol-toggle-mini">${prefs.miniPlayer?'Hide':'Show'} mini player</button></div></section></div>`;
       $('#sol-open-immersive').onclick=()=>{closeStudio();openImmersive();};
       $('#sol-open-lyrics').onclick=()=>renderStudio('lyrics');
       $('#sol-open-live').onclick=()=>{closeStudio();toggleLiveLyrics();};
@@ -1283,14 +1282,14 @@
     }
     // Event-driven track updates, with a light fallback for Spotify route changes.
     // 800ms lyric/progress ticks and 4s sidebar checks reduce unnecessary CPU/DOM work.
-    timer=setInterval(tickPlayback,1200);
+    timer=setInterval(tickPlayback,1600);
     // Short cadence only for real word-timestamp lyrics, not approximate line fills.
     setInterval(()=>{
       if(document.hidden||!prefs.dynamicLyrics||!prefs.karaoke||!isPlaying()||vinylScrub)return;
       if(!$('#sol-immersive:not([hidden])') && !$('#sol-live-panel:not([hidden])') && !$('#sol-sidebar-lyrics') && !$('#sol-overlay:not([hidden])'))return;
       const data=lyricText();
       if(data && cachedLRC(data).some(l=>l.words?.length))updateLyricUI();
-    },700);
+    },1000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { onTrackChanged(); tickPlayback(); mountSidebar(); repairExplicitBadges(); } });
     setInterval(()=>{ if (document.hidden) return; mountArtwork(); mountSidebar(); onTrackChanged(); repairExplicitBadges(); if (!$('#sol-overlay')?.hidden) renderDiagnostics(); },6000);
   }
