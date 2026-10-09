@@ -2,13 +2,15 @@
 
 ### Your music. In full color.
 
-**Solstice 3.1.24** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
+**Solstice 3.1.25** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
 
-**🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.24.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
+**🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.25.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
 
 **⭐ [Please star this repository to help support Solstice!](https://github.com/y2kbeatzz-dot/Solstice)**
 
-![Solstice preview](preview-v3.1.24.svg)
+![Solstice preview](preview-v3.1.25.svg)
+
+**3.1.25 preview-match fix:** Immersive Mode now places the **animated silver straight tonearm to the right of a black grooved LP**, with your current cover as a **40% circular center label**, matching the website concept. The theme script enforces essential dimensions directly even if Marketplace has older CSS. The 33⅓ RPM motor, scrub controls, synced lyrics and preferences remain intact.
 
 **3.1.24 vinyl motor fix:** Ships the turntable's spinning keyframes together with the self-contained fallback CSS. The record rotates at **33⅓ RPM** (one revolution every 1.8 seconds) during playback, pauses when playback stops, and resumes from the current angle after manual dragging. User and system reduced-motion preferences remain respected. No lyrics or Studio data are reset.
 
@@ -29,7 +31,7 @@
 - **Solstice Updater** — an in-theme Studio tab that checks the latest public release, opens Marketplace, and backs up/restores Studio settings and edited lyrics.
 - **Lightweight playback updates** — shared lyric timing and cached rendering.
 
-## Version 3.1.24
+## Version 3.1.25
 
 Adds an **interactive vinyl deck** to Immersive Mode: drag the record clockwise to advance or counterclockwise to rewind, lift/drop the tonearm to pause/play, and use ±10-second buttons. Supports keyboard seeking and preserves Studio preferences, saved lyrics, and all previous visual features. The Studio Updater, saved settings and lyrics, immersive effects, and all previous features remain.
 
