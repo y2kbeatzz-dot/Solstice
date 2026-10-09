@@ -3,10 +3,10 @@
   "description": "Solstice 3.1.34 — fixes Lyrics Studio switch controls, font selection, and lyric edit/import saving. Includes immersive vinyl, synchronized lyrics and performance improvements.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
-  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@723af1ad34933694c2f5c669273784d8e6e6e277/user.css",
+  "usercss": "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@af65b5a07d6505c55bcb7b7e82d434232fe4a8eb/user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@723af1ad34933694c2f5c669273784d8e6e6e277/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@af65b5a07d6505c55bcb7b7e82d434232fe4a8eb/theme.js"
   ],
   "authors": [
     {
