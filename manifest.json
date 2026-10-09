@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.25 — Immersive turntable matches preview: realistic black grooved record, centered 40% album-art label, silver animated right-side tonearm, smooth 33⅓ RPM spin, synced lyrics, glass and Studio.",
-  "preview": "preview-v3.1.25.svg",
+  "description": "Solstice 3.1.26 — responsive Immersive overhaul with precise needle cueing onto the vinyl, improved sizing and controls, artwork-centered black LP, smooth 33⅓ RPM spin, lyrics and Studio.",
+  "preview": "preview-v3.1.26.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@5a85720a63beaf1cf34caeb1b23e132f2db7bead/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@1a75fff6b4f5a2c44c59c199c78f1491850c977c/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.25"
+  "version": "3.1.26"
 }
