@@ -1009,6 +1009,7 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 }
 #sol-immersive #sol-vinyl:not(.sol-scratching){
   animation:solstice-turntable-motor 13s linear infinite!important;
+  animation-delay:var(--sol-motor-offset,0s)!important;
   animation-play-state:running!important;
   transform-origin:center center!important;
 }
