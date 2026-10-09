@@ -2,13 +2,15 @@
 
 ### Your music. In full color.
 
-**Solstice 3.1.19** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
+**Solstice 3.1.20** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
 
-**🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.19.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
+**🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.20.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
 
 **⭐ [Please star this repository to help support Solstice!](https://github.com/y2kbeatzz-dot/Solstice)**
 
-![Solstice preview](preview-v3.1.19.svg)
+![Solstice preview](preview-v3.1.20.svg)
+
+**3.1.20 fix:** The turntable now has visible black vinyl grooves, a smaller circular album-art center label, a properly mounted tonearm, and record rotation that follows your mouse as you drag it. Clockwise/anticlockwise seeking and ±10-second buttons remain.
 
 ## Features
 
@@ -19,7 +21,7 @@
 - **Solstice Updater** — an in-theme Studio tab that checks the latest public release, opens Marketplace, and backs up/restores Studio settings and edited lyrics.
 - **Lightweight playback updates** — shared lyric timing and cached rendering.
 
-## Version 3.1.19
+## Version 3.1.20
 
 Adds an **interactive vinyl deck** to Immersive Mode: drag the record clockwise to advance or counterclockwise to rewind, lift/drop the tonearm to pause/play, and use ±10-second buttons. Supports keyboard seeking and preserves Studio preferences, saved lyrics, and all previous visual features. The Studio Updater, saved settings and lyrics, immersive effects, and all previous features remain.
 
