@@ -531,66 +531,49 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
   object-fit:cover;
 }
 
-
-/* v3.1.11: Spotify's explicit badge is a .main-tag-container inside
-   .main-trackList-rowBadges. Force a legible E even if the native glyph is
-   hidden by Spotify font updates. Leave adjacent video/music-video markers
-   and native playback controls untouched. */
-.main-trackList-rowBadges .main-tag-container,
-.main-trackList-rowBadges [title~="Explicit" i],
-.main-trackList-rowBadges [aria-label="Explicit" i],
-.main-trackList-rowBadges [data-testid="track-row-explicit-badge"],
-.main-trackList-rowMainContent > .main-tag-container[title~="Explicit" i],
-.main-trackList-rowMainContent > [data-testid="track-row-explicit-badge"] {
+/* v3.1.12: Restore Spotify's own explicit E.
+   Spotify renders the letter as text inside span.main-tag-container.
+   An earlier CSS workaround suppressed that letter with font-size:0.
+   Don't add a second synthetic E or alter neighboring metadata icons. */
+.Root__main-view .main-tag-container[title="Explicit"],
+.Root__main-view .main-tag-container[aria-label="Explicit"],
+.Root__main-view [data-testid="track-row-explicit-badge"] {
   box-sizing:border-box!important;
-  position:relative!important;
   display:inline-flex!important;
-  justify-content:center!important;
   align-items:center!important;
-  flex:none!important;
+  justify-content:center!important;
+  flex-shrink:0!important;
   width:17px!important;
   min-width:17px!important;
-  max-width:17px!important;
   height:17px!important;
   min-height:17px!important;
   padding:0!important;
   margin:0 5px 0 0!important;
   border:0!important;
   border-radius:3px!important;
-  background-color:#a9b6bc!important;
+  background:#aab6bc!important;
   background-image:none!important;
-  overflow:hidden!important;
-  font-size:0!important; /* hide a malformed original character */
-  line-height:1!important;
-  text-shadow:none!important;
-  opacity:1!important;
-  visibility:visible!important;
-}
-/* A pseudo-element is independent of Spotify's changing text/icon font. */
-.main-trackList-rowBadges .main-tag-container::after,
-.main-trackList-rowBadges [title~="Explicit" i]::after,
-.main-trackList-rowBadges [aria-label="Explicit" i]::after,
-.main-trackList-rowBadges [data-testid="track-row-explicit-badge"]::after,
-.main-trackList-rowMainContent > .main-tag-container[title~="Explicit" i]::after,
-.main-trackList-rowMainContent > [data-testid="track-row-explicit-badge"]::after {
-  content:"E"!important;
-  display:block!important;
-  position:relative!important;
-  z-index:1!important;
-  width:auto!important;
-  height:auto!important;
-  background:transparent!important;
-  color:#15242c!important;
-  font:900 11px/1 Arial,Helvetica,sans-serif!important;
-  letter-spacing:0!important;
-  text-shadow:none!important;
-  opacity:1!important;
-  visibility:visible!important;
-  pointer-events:none!important;
-}
-/* Current Spotify can also place the badge directly in row metadata. */
-.main-trackList-rowMainContent > span[title="Explicit"],
-.main-trackList-rowMainContent > span[aria-label="Explicit"] {
-  color:#15242c!important;
+  color:#17252b!important;
+  -webkit-text-fill-color:#17252b!important;
   font-family:Arial,Helvetica,sans-serif!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  font-style:normal!important;
+  font-variant:normal!important;
+  line-height:1!important;
+  letter-spacing:0!important;
+  text-indent:0!important;
+  text-transform:none!important;
+  text-decoration:none!important;
+  text-shadow:none!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+/* Undo the earlier pseudo-element workaround; Spotify already supplies E. */
+.Root__main-view .main-tag-container[title="Explicit"]::before,
+.Root__main-view .main-tag-container[title="Explicit"]::after,
+.Root__main-view .main-tag-container[aria-label="Explicit"]::before,
+.Root__main-view .main-tag-container[aria-label="Explicit"]::after {
+  content:none!important;
+  display:none!important;
 }
