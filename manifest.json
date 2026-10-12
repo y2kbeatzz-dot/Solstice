@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.47 — local music artwork fallbacks for immersive backgrounds and vinyl labels.",
+  "description": "Solstice 3.1.48 — prefer Spotify's real local-file album artwork for immersive vinyl and background.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@65a50ed04d2099658ab65cb1c17b7ccc794a05e6/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@bb38435f19a3bd3bc9362198381e64f1031e1fad/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.47"
+  "version": "3.1.48"
 }
