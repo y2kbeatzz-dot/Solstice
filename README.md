@@ -2,7 +2,7 @@
 
 ### Your music. In full color.
 
-**Solstice 3.1.48** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
+**Solstice 3.1.49** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
 
 **🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.32.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
 
@@ -54,9 +54,9 @@
 
 **3.1.45 timing and progression:** Fixed a competing 1.6-second playback status loop overwriting the frame-paced lyrics. Fixed the Lyric timing adjustment slider's direction (negative is earlier), and limited text-gradient repaints with 4% increments. No settings reset required.
 
-## Spotify Local Files (3.1.48)
+## Spotify Local Files (3.1.49)
 
-**Real artwork lookup:** Solstice now prioritizes album covers displayed in Spotify's native Now Playing controls for local tracks, including available metadata images. When Spotify exposes tagged cover art to its interface, Solstice attempts to use that image on both the vinyl center label and animated background. If no usable image is exposed, Solstice still generates a track-specific fallback cover. This does not grant Solstice direct access to MP3 files or guarantee embedded art extraction.
+**Real artwork lookup (3.1.49):** Solstice now also checks Spotify's Now Playing right sidebar for a visible local-file album cover, prioritizing the native artwork for the immersive vinyl label and background. This still depends on Spotify exposing an accessible image to the theme.\n\n**Previous artwork lookup:** Solstice now prioritizes album covers displayed in Spotify's native Now Playing controls for local tracks, including available metadata images. When Spotify exposes tagged cover art to its interface, Solstice attempts to use that image on both the vinyl center label and animated background. If no usable image is exposed, Solstice still generates a track-specific fallback cover. This does not grant Solstice direct access to MP3 files or guarantee embedded art extraction.
 
 
 Solstice now recognizes `spotify:local:` tracks and uses local-file URI metadata as a fallback for title, artist, album, and song duration. It uses available artwork for the immersive vinyl label and ambient background, and generates a track-specific title/artist cover when Spotify supplies no usable artwork, and continues to search LRCLIB for matching lyrics where metadata exists. You can import your own timed LRC lyrics via Solstice Studio when no online match is available. Playback, queue, and file scanning remain managed by Spotify, not the theme.
@@ -72,7 +72,7 @@ To use it, enable **Local Files** in Spotify settings, add a music source folder
 - **Solstice Updater** — an in-theme Studio tab that checks the latest public release, opens Marketplace, and backs up/restores Studio settings and edited lyrics.
 - **Lightweight playback updates** — shared lyric timing and cached rendering.
 
-## Version 3.1.48
+## Version 3.1.49
 
 Includes font consistency and rendering performance fixes plus the **interactive vinyl deck** to Immersive Mode: drag the record clockwise to advance or counterclockwise to rewind, lift/drop the tonearm to pause/play, and use ±10-second buttons. Supports keyboard seeking and preserves Studio preferences, saved lyrics, and all previous visual features. The Studio Updater, saved settings and lyrics, immersive effects, and all previous features remain.
 
