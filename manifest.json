@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.46 — improved Spotify Local Files track metadata, artwork handling, and lyrics compatibility.",
+  "description": "Solstice 3.1.47 — local music artwork fallbacks for immersive backgrounds and vinyl labels.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@9d8a3c0c515d11cb5470dd99d68da818e60267a4/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@65a50ed04d2099658ab65cb1c17b7ccc794a05e6/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.46"
+  "version": "3.1.47"
 }
