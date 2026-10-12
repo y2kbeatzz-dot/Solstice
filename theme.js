@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.47';
+  const SOLSTICE_VERSION = '3.1.48';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -72,7 +72,34 @@
     let u=value.trim();
     if(u.startsWith('spotify:image:'))u='https://i.scdn.co/image/'+u.slice(14);
     if(u.startsWith('spotify:mosaic:'))u='https://mosaic.scdn.co/640/'+u.slice(15).replace(/:/g,'');
-    return /^(https?:|data:image\/|blob:)/i.test(u)?u:'';
+    if(u.startsWith('sp://image/'))u='https://i.scdn.co/image/'+u.slice(11);
+    return /^(https?:|data:image\/|blob:|spotify:)/i.test(u) && !u.startsWith('spotify:') ? u : '';
+  }
+  function nativeCover() {
+    // The visible Spotify now-playing artwork is more reliable for local tracks
+    // than track metadata. Never inspect artwork belonging to Solstice itself.
+    const selectors=[
+      '[data-testid="now-playing-widget"] img',
+      '[data-testid="cover-art-image"]',
+      '.main-nowPlayingWidget-coverArt img',
+      '.main-coverSlotCollapsed-container img',
+      '.main-nowPlayingBar-nowPlayingBar img',
+      '[data-testid="now-playing-widget"] [style*="background-image"]'
+    ];
+    for(const selector of selectors){
+      for(const node of document.querySelectorAll(selector)){
+        if(node.closest('#sol-immersive,#sol-mini,#sol-overlay,#sol-art-stage'))continue;
+        const sources=[node.currentSrc,node.getAttribute('src'),node.getAttribute('data-src')];
+        const css=getComputedStyle(node).backgroundImage;
+        if(css && css!=='none'){
+          const match=css.match(/url\\(["']?(.+?)["']?\\)/);
+          if(match)sources.push(match[1]);
+        }
+        const found=sources.map(playableCover).find(Boolean);
+        if(found)return found;
+      }
+    }
+    return '';
   }
   function track() {
     const state = player()?.data;
@@ -82,23 +109,23 @@
     const local = String(uri).startsWith('spotify:local:') || !!meta.is_local || x.is_local === true;
     const parts = localParts(uri);
     const a = Array.isArray(x.artists) ? x.artists : Array.isArray(x.album?.artists) ? x.album.artists : [];
-    const artist = a.map(i => i?.name).filter(Boolean).join(', ') || meta.artist_name || meta.artist || (local ? parts[0] : '') || 'Spotify';
+    const artist = a.map(i=>i?.name).filter(Boolean).join(', ') || meta.artist_name || meta.artist || (local ? parts[0] : '') || 'Spotify';
     const title = x.name || meta.title || (local ? parts[2] : '') || 'Nothing playing';
     const album = x.album?.name || meta.album_title || (local ? parts[1] : '') || '';
-    const images = x.album?.images || x.images || [];
-    const candidates=[...images.map(i=>i?.url||i?.uri),x.image_url,meta.image_url,
-      meta.image_large_url,meta.image_xlarge_url,meta.image_small_url,meta.album_art_url,
-      meta.cover_art_url];
-    const nativeArt=$('[data-testid="cover-art-image"]') || $('.main-nowPlayingWidget-coverArt img');
-    if(nativeArt && !nativeArt.closest('#sol-immersive,#sol-mini,#sol-overlay'))
-      candidates.push(nativeArt.currentSrc,nativeArt.src);
-    let cover=candidates.map(playableCover).find(Boolean)||'';
-    // Spotify does not always expose embedded artwork from local audio files.
-    if(local && !cover)cover=localCoverPlaceholder(title,artist);
-    const d = Number(parts[3]);
-    return { uri, title, artist, album, cover, local,
-      duration: Math.round(duration()/1000) || (Number.isFinite(d) && d>0 ? d : 0) ||
-      Math.round((x.duration?.milliseconds || x.duration || 0)/1000) };
+    const images=x.album?.images || x.images || [];
+    const metadataCover=[...images.map(i=>i?.url||i?.uri),x.image_url,
+      meta.image_url,meta.image_large_url,meta.image_xlarge_url,
+      meta.image_small_url,meta.album_art_url,meta.cover_art_url]
+      .map(playableCover).find(Boolean)||'';
+    // Prefer Spotify's rendered cover when playing a local file. If it becomes
+    // available after metadata, our existing 6-second refresh will pick it up.
+    const visibleCover=nativeCover();
+    const cover=(local ? (visibleCover||metadataCover) : (metadataCover||visibleCover)) ||
+      (local ? localCoverPlaceholder(title,artist) : '');
+    const d=Number(parts[3]);
+    return {uri,title,artist,album,cover,local,
+      duration:Math.round(duration()/1000)||(Number.isFinite(d)&&d>0?d:0)||
+      Math.round((x.duration?.milliseconds||x.duration||0)/1000)};
   }
   function trackKey() { const t=track(); return t.uri || [t.title,t.artist,t.album].join('|') || 'manual'; }
   function trackSignature(t = track()) { return [t.uri, t.title, t.artist].join('|'); }
