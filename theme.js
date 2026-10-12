@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.46';
+  const SOLSTICE_VERSION = '3.1.47';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -58,6 +58,22 @@
       try { return decodeURIComponent(part.replace(/\+/g, '%20')); } catch { return part; }
     });
   }
+  function localCoverPlaceholder(title, artist) {
+    const label=String(title||'Local track').slice(0,32);
+    const by=String(artist||'Local artist').slice(0,36);
+    let hash=0;for(const c of label+by)hash=(hash*31+c.charCodeAt(0))|0;
+    const hue=Math.abs(hash)%360;
+    const escapeXml=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="hsl('+hue+',65%,33%)"/><stop offset="1" stop-color="#09121f"/></linearGradient></defs><rect width="600" height="600" fill="url(#bg)"/><circle cx="480" cy="110" r="220" fill="white" opacity=".08"/><text x="42" y="90" fill="white" font-family="sans-serif" font-size="24">SOLSTICE · LOCAL</text><text x="42" y="310" fill="white" font-family="sans-serif" font-weight="bold" font-size="39">'+escapeXml(label)+'</text><text x="42" y="366" fill="#d4faf3" font-family="sans-serif" font-size="25">'+escapeXml(by)+'</text></svg>';
+    return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  }
+  function playableCover(value) {
+    if(typeof value!=='string')return '';
+    let u=value.trim();
+    if(u.startsWith('spotify:image:'))u='https://i.scdn.co/image/'+u.slice(14);
+    if(u.startsWith('spotify:mosaic:'))u='https://mosaic.scdn.co/640/'+u.slice(15).replace(/:/g,'');
+    return /^(https?:|data:image\/|blob:)/i.test(u)?u:'';
+  }
   function track() {
     const state = player()?.data;
     const x = state?.item || state?.track || {};
@@ -70,14 +86,15 @@
     const title = x.name || meta.title || (local ? parts[2] : '') || 'Nothing playing';
     const album = x.album?.name || meta.album_title || (local ? parts[1] : '') || '';
     const images = x.album?.images || x.images || [];
-    let cover = images.find(i => i?.url || i?.uri)?.url || images[0]?.uri ||
-      x.image_url || meta.image_url || meta.image_large_url || meta.image_xlarge_url || '';
-    // Local artwork may only be present in Spotify's now-playing UI.
-    if (!cover) cover = $('[data-testid="cover-art-image"]')?.src ||
-      $('.main-nowPlayingWidget-coverArt img')?.src || '';
-    if (cover.startsWith('spotify:image:')) cover = 'https://i.scdn.co/image/' + cover.slice(14);
-    if (cover.startsWith('spotify:mosaic:')) cover = 'https://mosaic.scdn.co/640/' + cover.slice(15).replace(/:/g, '');
-    if (!/^(https?:|data:image\/)/i.test(cover)) cover = '';
+    const candidates=[...images.map(i=>i?.url||i?.uri),x.image_url,meta.image_url,
+      meta.image_large_url,meta.image_xlarge_url,meta.image_small_url,meta.album_art_url,
+      meta.cover_art_url];
+    const nativeArt=$('[data-testid="cover-art-image"]') || $('.main-nowPlayingWidget-coverArt img');
+    if(nativeArt && !nativeArt.closest('#sol-immersive,#sol-mini,#sol-overlay'))
+      candidates.push(nativeArt.currentSrc,nativeArt.src);
+    let cover=candidates.map(playableCover).find(Boolean)||'';
+    // Spotify does not always expose embedded artwork from local audio files.
+    if(local && !cover)cover=localCoverPlaceholder(title,artist);
     const d = Number(parts[3]);
     return { uri, title, artist, album, cover, local,
       duration: Math.round(duration()/1000) || (Number.isFinite(d) && d>0 ? d : 0) ||
