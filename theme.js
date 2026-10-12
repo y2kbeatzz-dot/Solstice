@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.48';
+  const SOLSTICE_VERSION = '3.1.49';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -76,30 +76,36 @@
     return /^(https?:|data:image\/|blob:|spotify:)/i.test(u) && !u.startsWith('spotify:') ? u : '';
   }
   function nativeCover() {
-    // The visible Spotify now-playing artwork is more reliable for local tracks
-    // than track metadata. Never inspect artwork belonging to Solstice itself.
+    // Read Spotify's real native artwork, including the large Now Playing
+    // image in the right sidebar (which local tracks often expose only there).
     const selectors=[
+      '.Root__right-sidebar img',
+      '[data-testid="now-playing-view"] img',
+      '.main-nowPlayingView-nowPlayingView img',
       '[data-testid="now-playing-widget"] img',
       '[data-testid="cover-art-image"]',
       '.main-nowPlayingWidget-coverArt img',
       '.main-coverSlotCollapsed-container img',
       '.main-nowPlayingBar-nowPlayingBar img',
-      '[data-testid="now-playing-widget"] [style*="background-image"]'
+      '.Root__now-playing-bar img'
     ];
-    for(const selector of selectors){
-      for(const node of document.querySelectorAll(selector)){
-        if(node.closest('#sol-immersive,#sol-mini,#sol-overlay,#sol-art-stage'))continue;
-        const sources=[node.currentSrc,node.getAttribute('src'),node.getAttribute('data-src')];
-        const css=getComputedStyle(node).backgroundImage;
-        if(css && css!=='none'){
-          const match=css.match(/url\(["']?(.+?)["']?\)/);
-          if(match)sources.push(match[1]);
-        }
-        const found=sources.map(playableCover).find(Boolean);
-        if(found)return found;
-      }
+    const choices=[];
+    for(const selector of selectors)for(const node of document.querySelectorAll(selector)){
+      if(node.closest('#sol-immersive,#sol-mini,#sol-overlay,#sol-art-stage,#sol-sidebar-lyrics'))continue;
+      const sources=[node.currentSrc,node.src,node.getAttribute('src'),node.getAttribute('data-src')];
+      const style=getComputedStyle(node).backgroundImage;
+      const m=style && style.match(/url\(["']?(.+?)["']?\)/);
+      if(m)sources.push(m[1]);
+      const found=sources.map(playableCover).find(Boolean);
+      if(!found)continue;
+      const rect=node.getBoundingClientRect();
+      const score=(selector.includes('right-sidebar')||selector.includes('now-playing-view')?100:0)
+        +Math.min(400,Math.max(rect.width,rect.height))
+        -(node.closest('[data-testid="now-playing-widget"]')?20:0);
+      choices.push({found,score});
     }
-    return '';
+    choices.sort((x,y)=>y.score-x.score);
+    return choices[0]?.found||'';
   }
   function track() {
     const state = player()?.data;
