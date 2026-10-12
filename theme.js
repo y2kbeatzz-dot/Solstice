@@ -92,7 +92,7 @@
         const sources=[node.currentSrc,node.getAttribute('src'),node.getAttribute('data-src')];
         const css=getComputedStyle(node).backgroundImage;
         if(css && css!=='none'){
-          const match=css.match(/url\\(["']?(.+?)["']?\\)/);
+          const match=css.match(/url\(["']?(.+?)["']?\)/);
           if(match)sources.push(match[1]);
         }
         const found=sources.map(playableCover).find(Boolean);
