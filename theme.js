@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.49';
+  const SOLSTICE_VERSION = '3.1.50';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -75,37 +75,36 @@
     if(u.startsWith('sp://image/'))u='https://i.scdn.co/image/'+u.slice(11);
     return /^(https?:|data:image\/|blob:|spotify:)/i.test(u) && !u.startsWith('spotify:') ? u : '';
   }
+  const realLocalCovers=new Map();
   function nativeCover() {
-    // Read Spotify's real native artwork, including the large Now Playing
-    // image in the right sidebar (which local tracks often expose only there).
-    const selectors=[
-      '.Root__right-sidebar img',
-      '[data-testid="now-playing-view"] img',
-      '.main-nowPlayingView-nowPlayingView img',
-      '[data-testid="now-playing-widget"] img',
-      '[data-testid="cover-art-image"]',
-      '.main-nowPlayingWidget-coverArt img',
-      '.main-coverSlotCollapsed-container img',
-      '.main-nowPlayingBar-nowPlayingBar img',
-      '.Root__now-playing-bar img'
-    ];
-    const choices=[];
-    for(const selector of selectors)for(const node of document.querySelectorAll(selector)){
-      if(node.closest('#sol-immersive,#sol-mini,#sol-overlay,#sol-art-stage,#sol-sidebar-lyrics'))continue;
-      const sources=[node.currentSrc,node.src,node.getAttribute('src'),node.getAttribute('data-src')];
-      const style=getComputedStyle(node).backgroundImage;
-      const m=style && style.match(/url\(["']?(.+?)["']?\)/);
-      if(m)sources.push(m[1]);
-      const found=sources.map(playableCover).find(Boolean);
-      if(!found)continue;
-      const rect=node.getBoundingClientRect();
-      const score=(selector.includes('right-sidebar')||selector.includes('now-playing-view')?100:0)
-        +Math.min(400,Math.max(rect.width,rect.height))
-        -(node.closest('[data-testid="now-playing-widget"]')?20:0);
-      choices.push({found,score});
+    // Spotify may render the local cover as an IMG or a CSS background.
+    const roots=['.Root__right-sidebar','.Root__now-playing-bar',
+      '[data-testid="now-playing-view"]','[data-testid="now-playing-widget"]',
+      '.main-nowPlayingView-nowPlayingView','.main-nowPlayingWidget-coverArt',
+      '.main-coverSlotCollapsed-container'];
+    const candidates=[];
+    for(const selector of roots)for(const host of document.querySelectorAll(selector)){
+      const elements=[host,...host.querySelectorAll('img,[style*="background"],[class*="cover"],[class*="Cover"]')];
+      for(const node of elements.slice(0,160)){
+        if(node.closest('#sol-immersive,#sol-mini,#sol-overlay,#sol-art-stage,#sol-sidebar-lyrics'))continue;
+        const urls=[];
+        if(node.tagName==='IMG')urls.push(node.currentSrc,node.src,node.getAttribute('src'),node.getAttribute('data-src'));
+        const inline=node.style?.backgroundImage||'';
+        const css=(inline.includes('url(')?inline:getComputedStyle(node).backgroundImage)||'';
+        if(css.includes('url(')){
+          const matches=[...css.matchAll(/url\\(\\s*["']?([^"')]+)["']?\\s*\\)/g)];
+          for(const m of matches)urls.push(m[1]);
+        }
+        const found=urls.map(playableCover).find(Boolean);
+        if(!found || found.startsWith('data:image/svg+xml'))continue;
+        const rect=node.getBoundingClientRect();
+        candidates.push({url:found,score:(selector.includes('right-sidebar')?150:0)
+          +Math.min(350,Math.max(rect.width,rect.height))
+          +(node.tagName==='IMG'?20:0)});
+      }
     }
-    choices.sort((x,y)=>y.score-x.score);
-    return choices[0]?.found||'';
+    candidates.sort((a,b)=>b.score-a.score);
+    return candidates[0]?.url||'';
   }
   function track() {
     const state = player()?.data;
@@ -126,7 +125,9 @@
     // Prefer Spotify's rendered cover when playing a local file. If it becomes
     // available after metadata, our existing 6-second refresh will pick it up.
     const visibleCover=nativeCover();
-    const cover=(local ? (visibleCover||metadataCover) : (metadataCover||visibleCover)) ||
+    const localKey=local?uri+'|'+title+'|'+artist:'';
+    if(local && (visibleCover||metadataCover))realLocalCovers.set(localKey,visibleCover||metadataCover);
+    const cover=(local ? (visibleCover||metadataCover||realLocalCovers.get(localKey)) : (metadataCover||visibleCover)) ||
       (local ? localCoverPlaceholder(title,artist) : '');
     const d=Number(parts[3]);
     return {uri,title,artist,album,cover,local,
