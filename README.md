@@ -2,7 +2,7 @@
 
 ### Your music. In full color.
 
-**Solstice 3.1.45** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
+**Solstice 3.1.46** is an immersive Spicetify theme featuring artwork-driven colors, glass interfaces, synchronized lyrics, and a customizable player. Made by Crystal.
 
 **🌐 [Official website](https://y2kbeatzz-dot.github.io/Solstice/)** · **[Preview](preview-v3.1.32.svg)** · **[Report an issue](https://github.com/y2kbeatzz-dot/Solstice/issues)**
 
@@ -54,6 +54,12 @@
 
 **3.1.45 timing and progression:** Fixed a competing 1.6-second playback status loop overwriting the frame-paced lyrics. Fixed the Lyric timing adjustment slider's direction (negative is earlier), and limited text-gradient repaints with 4% increments. No settings reset required.
 
+## Spotify Local Files (3.1.46)
+
+Solstice now recognizes `spotify:local:` tracks and uses local-file URI metadata as a fallback for title, artist, album, and song duration. It also handles missing cover art gracefully instead of carrying over the previous song's background, and continues to search LRCLIB for matching lyrics where metadata exists. You can import your own timed LRC lyrics via Solstice Studio when no online match is available. Playback, queue, and file scanning remain managed by Spotify, not the theme.
+
+To use it, enable **Local Files** in Spotify settings, add a music source folder, then play a track from Spotify's Local Files library. Spotify may not supply artwork or embedded lyrics for every local file. The theme cannot independently read arbitrary Windows music folders from inside Spotify.
+
 ## Features
 
 - **Artwork-powered colors** — accents and lighting respond to the album cover.
@@ -63,7 +69,7 @@
 - **Solstice Updater** — an in-theme Studio tab that checks the latest public release, opens Marketplace, and backs up/restores Studio settings and edited lyrics.
 - **Lightweight playback updates** — shared lyric timing and cached rendering.
 
-## Version 3.1.45
+## Version 3.1.46
 
 Includes font consistency and rendering performance fixes plus the **interactive vinyl deck** to Immersive Mode: drag the record clockwise to advance or counterclockwise to rewind, lift/drop the tonearm to pause/play, and use ±10-second buttons. Supports keyboard seeking and preserves Studio preferences, saved lyrics, and all previous visual features. The Studio Updater, saved settings and lyrics, immersive effects, and all previous features remain.
 
