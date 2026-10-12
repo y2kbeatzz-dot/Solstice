@@ -4,7 +4,7 @@
   if (window.__solstice3) return;
   window.__solstice3 = true;
 
-  const SOLSTICE_VERSION = '3.1.45';
+  const SOLSTICE_VERSION = '3.1.46';
   window.__solsticeVersion = SOLSTICE_VERSION; // Diagnostic; does not affect preferences.
   // The Marketplace manifest pins theme.js and user.css to this same build commit.
   // Do not change the installed theme's IndexedDB data or saved user preferences.
@@ -51,22 +51,39 @@
   function isPlaying() { try { return !!player()?.isPlaying?.(); } catch { return false; } }
   function progress() { try { return Math.max(0, Number(player()?.getProgress?.() ?? 0)); } catch { return 0; } }
   function duration() { try { return Math.max(0, Number(player()?.getDuration?.() ?? 0)); } catch { return 0; } }
+  // Spotify local files use spotify:local: URIs and often omit the normal album/artists objects.
+  function localParts(uri) {
+    if (!String(uri).startsWith('spotify:local:')) return [];
+    return String(uri).slice(14).split(':').map(part => {
+      try { return decodeURIComponent(part.replace(/\+/g, '%20')); } catch { return part; }
+    });
+  }
   function track() {
     const state = player()?.data;
     const x = state?.item || state?.track || {};
     const meta = x.metadata || {};
+    const uri = x.uri || meta.uri || state?.context?.uri || '';
+    const local = String(uri).startsWith('spotify:local:') || !!meta.is_local || x.is_local === true;
+    const parts = localParts(uri);
     const a = Array.isArray(x.artists) ? x.artists : Array.isArray(x.album?.artists) ? x.album.artists : [];
-    const artist = a.map(i => i.name).filter(Boolean).join(', ') || meta.artist_name || meta.artist || 'Spotify';
+    const artist = a.map(i => i?.name).filter(Boolean).join(', ') || meta.artist_name || meta.artist || (local ? parts[0] : '') || 'Spotify';
+    const title = x.name || meta.title || (local ? parts[2] : '') || 'Nothing playing';
+    const album = x.album?.name || meta.album_title || (local ? parts[1] : '') || '';
     const images = x.album?.images || x.images || [];
-    let cover = images.find(i => i?.url || i?.uri)?.url || images[0]?.uri || x.image_url || meta.image_url || '';
-    if (!cover) cover = $('[data-testid="cover-art-image"]')?.src || $('.main-nowPlayingWidget-coverArt img')?.src || '';
+    let cover = images.find(i => i?.url || i?.uri)?.url || images[0]?.uri ||
+      x.image_url || meta.image_url || meta.image_large_url || meta.image_xlarge_url || '';
+    // Local artwork may only be present in Spotify's now-playing UI.
+    if (!cover) cover = $('[data-testid="cover-art-image"]')?.src ||
+      $('.main-nowPlayingWidget-coverArt img')?.src || '';
     if (cover.startsWith('spotify:image:')) cover = 'https://i.scdn.co/image/' + cover.slice(14);
     if (cover.startsWith('spotify:mosaic:')) cover = 'https://mosaic.scdn.co/640/' + cover.slice(15).replace(/:/g, '');
-    if (!/^https?:\/\//i.test(cover)) cover = '';
-    return { uri: x.uri || x.id || '', title: x.name || meta.title || 'Nothing playing', artist,
-      album: x.album?.name || meta.album_title || '', cover, duration: Math.round(duration()/1000) || Math.round((x.duration?.milliseconds || x.duration || 0)/1000) };
+    if (!/^(https?:|data:image\/)/i.test(cover)) cover = '';
+    const d = Number(parts[3]);
+    return { uri, title, artist, album, cover, local,
+      duration: Math.round(duration()/1000) || (Number.isFinite(d) && d>0 ? d : 0) ||
+      Math.round((x.duration?.milliseconds || x.duration || 0)/1000) };
   }
-  function trackKey() { return track().uri || 'manual'; }
+  function trackKey() { const t=track(); return t.uri || [t.title,t.artist,t.album].join('|') || 'manual'; }
   function trackSignature(t = track()) { return [t.uri, t.title, t.artist].join('|'); }
 
   const LYRIC_FONTS = Object.freeze({
@@ -143,7 +160,8 @@
   function redrawArtwork() {
     const stage = mountArtwork(); if (!stage) return;
     const t = track();
-    if (!t.cover || t.cover === lastCover) return;
+    if (!t.cover) { lastCover=''; stage.querySelectorAll('.sol-art-frame').forEach(el=>el.remove()); return; }
+    if (t.cover === lastCover) return;
     lastCover = t.cover;
     const next = document.createElement('div');
     next.className = 'sol-art-frame';
@@ -195,7 +213,7 @@
   async function updatePalette(t) {
     const ticket=++artworkGeneration;
     let hex=null, via='';
-    if(t.uri && typeof window.Spicetify?.colorExtractor === 'function') {
+    if(t.uri && !t.local && typeof window.Spicetify?.colorExtractor === 'function') {
       try {
         const colors=await window.Spicetify.colorExtractor(t.uri);
         hex=[colors?.VIBRANT_NON_ALARMING,colors?.VIBRANT,colors?.LIGHT_VIBRANT,colors?.PROMINENT].map(validHex).find(Boolean)||null;
@@ -209,7 +227,7 @@
       if(hex)via='cover pixel sampler';
     }
     if(ticket!==artworkGeneration)return;
-    if(!hex){lastColorStatus='Artwork colors blocked; last matched accent retained';return;}
+    if(!hex){lastColorStatus=t.local ? 'Local file: no extractable artwork; using current accent' : 'Artwork colors blocked; last matched accent retained';return;}
     const rgb=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
     const peak=Math.max(...rgb);
     const adjusted=peak<125?rgb.map(c=>Math.min(255,Math.round(c+(125-peak)*.85))):rgb;
@@ -454,7 +472,7 @@
   }
   async function fetchLyrics(force = false) {
     const t = track(), key = trackKey(), fingerprint = trackSignature(t);
-    if (!t.uri || t.artist === 'Spotify') { lastLyricStatus='Play a track first.'; updateLyricUI(); return; }
+    if (!t.uri || !t.title || t.title === 'Nothing playing' || t.artist === 'Spotify') { lastLyricStatus='Play a track first or provide local file metadata.'; updateLyricUI(); return; }
     if (savedLyrics[key] && !force) { lastLyricStatus='Using your saved lyrics.'; updateLyricUI(); return; }
     if (lyricCache.has(fingerprint) && !force) { lastLyricStatus=lyricCache.get(fingerprint).message; updateLyricUI(); return; }
     fetchAbort?.abort();
@@ -1263,6 +1281,7 @@
   }
   function onTrackChanged() {
     const t=track(), signature=trackSignature(t);
+    root.dataset.solSource=t.local?'local':'spotify';
     if(signature===currentId) { if(t.cover!==lastCover){redrawArtwork();updatePalette(t);}updateTrackDisplays();return;}
     if(currentId && t.uri && prefs.showPopups)notify(t.title+' — '+t.artist);
     currentId=signature;
