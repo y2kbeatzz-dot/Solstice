@@ -1,12 +1,12 @@
 {
   "name": "Solstice",
-  "description": "Solstice 3.1.45 — fixes dynamic lyric progression stutter caused by competing playback clocks, corrects sync slider direction, and reduces gradient repaints.",
+  "description": "Solstice 3.1.46 — improved Spotify Local Files track metadata, artwork handling, and lyrics compatibility.",
   "preview": "preview-v3.1.32.svg",
   "readme": "README.md",
   "usercss": "user.css",
   "schemes": "color.ini",
   "include": [
-    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@f5a313545f5c9ffa7e9e04a2158b6776b242c81c/theme.js"
+    "https://cdn.jsdelivr.net/gh/y2kbeatzz-dot/Solstice@9d8a3c0c515d11cb5470dd99d68da818e60267a4/theme.js"
   ],
   "authors": [
     {
@@ -21,5 +21,5 @@
     "lyrics"
   ],
   "branch": "main",
-  "version": "3.1.45"
+  "version": "3.1.46"
 }
