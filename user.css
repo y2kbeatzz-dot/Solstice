@@ -14,10 +14,12 @@
 }
 html,body {background:#070c12!important;}
 body {font-family:'Segoe UI Variable','Segoe UI',sans-serif;}
-/* Fixed artwork now lives INSIDE the .Root stacking context and underneath its real child panels. */
+/* Keep artwork behind native panels without changing popup-host positioning. */
 .Root{position:relative!important;isolation:isolate!important;background:transparent!important;}
-.Root > :not(#sol-art-stage) {position:relative;z-index:1;}
-#sol-art-stage{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;contain:paint;background:
+/* Grid items accept z-index without a position override. Search stays above
+   route content (and the player at layer 4), inside Spotify's native nav. */
+.Root__globalNav{z-index:5;}
+#sol-art-stage{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;contain:paint;background:
   radial-gradient(ellipse 100% 85% at 15% 22%,rgba(var(--sol-second-rgb),.48),transparent 72%),
   radial-gradient(ellipse 90% 78% at 88% 80%,rgba(var(--sol-third-rgb),.54),transparent 74%),
   linear-gradient(140deg,#060a12,rgba(var(--sol-panel-rgb),1) 60%,#080b11);}
@@ -274,13 +276,14 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 :root.sol-reduced-motion #sol-vinyl,
 :root.sol-reduced-motion #sol-ambient-bars i{animation:none!important;transition:none!important;}
 
-/* v3.1: transparent Spotify global search/header surfaces, excluding popup menus and text inputs. */
+/* Search/header wrappers must not establish filter containing blocks: Spotify
+   positions suggestions relative to its own anchor/viewport. Keep tint only. */
 .Root__globalNav,.Root__top-container,.main-globalNav-globalNav,
 [class*="main-globalNav-globalNav"],[class*="main-globalNav-container"],
 [class*="main-topBar-topbar"],[class*="main-topBar-background"],
 [class*="main-topBar-header"],[class*="main-globalNav-searchSection"] {
   background:rgba(var(--sol-panel-rgb),.10)!important;background-image:none!important;
-  backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
 }
 .Root__globalNav [class*="main-globalNav-searchInputContainer"],
 .Root__globalNav [class*="main-globalNav-searchContainer"],
@@ -290,7 +293,7 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 .Root__top-container [role="search"] {
   background:rgba(var(--sol-panel-rgb),.16)!important;
   background-image:none!important;
-  backdrop-filter:blur(var(--sol-blur))!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
   border-color:rgba(var(--sol-rgb),.24)!important;
 }
 .Root__globalNav input:focus,.Root__globalNav input:focus-visible {outline-color:var(--sol-accent)!important;}
@@ -384,8 +387,8 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 [class*="main-topBar-topbar"],[class*="main-topBar-background"],
 [class*="main-topBar-header"],[class*="main-globalNav-searchSection"] {
   background:var(--sol-live-surface)!important;
-  backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
-  -webkit-backdrop-filter:blur(var(--sol-blur)) saturate(150%)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
 }
 .Root__main-view {background:rgba(var(--sol-panel-rgb),calc(var(--sol-glass-alpha) * .52))!important;}
 .main-card-card,.main-yourLibraryX-listItem,[class*="main-shelf-Shelf"] {
@@ -1519,3 +1522,4 @@ input,textarea{accent-color:var(--sol-accent);}::selection{background:var(--sol-
 #sol-studio-lyrics, #sol-studio-lyrics .sol-line, #sol-studio-lyrics .sol-line-text, #sol-studio-lyrics .sol-word, #sol-lyric-font-preview{font-family:var(--sol-lyrics-font,'Segoe UI',sans-serif)!important;}
 #sol-art-stage .sol-art-frame{will-change:opacity;}
 :root.sol-motion-off #sol-art-stage .sol-art-frame,:root.sol-paused #sol-art-stage .sol-art-frame{will-change:auto;}
+
